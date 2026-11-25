@@ -1,0 +1,2023 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#2C4356" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Dashboard Sertifikat Sekolah</title>
+
+  <!-- PWA Manifest via Data URI -->
+  <link rel="manifest" href="data:application/manifest+json,{
+    %22name%22:%22Dashboard%20Sertifikat%20Sekolah%22,
+    %22short_name%22:%22Sertifikat%20Sekolah%22,
+    %22start_url%22:%22.%22,
+    %22display%22:%22standalone%22,
+    %22background_color%22:%22%23DCE4E8%22,
+    %22theme_color%22:%22%232C4356%22,
+    %22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%232C4356'/%3E%3Cpath d='M50 22L20 38l30 16 30-16-30-16zm-18 24v16c0 8 8 14 18 14s18-6 18-14V46L50 56 32 46z' fill='%238ABBC4'/%3E%3C/svg%3E%22,%22sizes%22:%22512x512%22,%22type%22:%22image/svg+xml%22}]
+  }" />
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            canvas: '#DCE4E8',
+            surface: '#E8EEF2',
+            sidebar: '#2C4356',
+            sidebarDark: '#1E303E',
+            primary: '#386B82',
+            mint: '#8ABBC4',
+            lavender: '#8A8FB5',
+            silverBar: '#B8C4CC',
+            ink: '#1A2B38',
+            inkMuted: '#475A68',
+            inkSubtle: '#788A96'
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- SheetJS (XLSX) for Excel Import & Export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- jsPDF & jsPDF-AutoTable for PDF Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    /* Full-page overlay untuk menutupi elemen bawaan Blogger / CMS */
+    #app-shell {
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      overflow-y: auto;
+      background-color: #DCE4E8;
+      background-image:
+        radial-gradient(at 15% 15%, rgba(255, 255, 255, 0.55) 0px, transparent 50%),
+        radial-gradient(at 85% 80%, rgba(138, 187, 196, 0.25) 0px, transparent 55%);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: #1A2B38;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Tactile Soft-UI / Matte Glassmorphism Cards */
+    .tactile-card {
+      background: rgba(232, 238, 242, 0.85);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(255, 255, 255, 0.8);
+      border-left: 1px solid rgba(255, 255, 255, 0.75);
+      border-right: 1px solid rgba(148, 163, 184, 0.25);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+      box-shadow: 0 12px 28px -6px rgba(30, 48, 62, 0.11), inset 0 1px 1px rgba(255, 255, 255, 0.85);
+    }
+
+    .tactile-inset {
+      background: rgba(212, 222, 228, 0.65);
+      box-shadow: inset 0 2px 5px rgba(30, 48, 62, 0.12), 0 1px 0 rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    .tactile-btn {
+      box-shadow: 0 6px 16px -4px rgba(56, 107, 130, 0.38), inset 0 1px 1px rgba(255, 255, 255, 0.45);
+      transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .tactile-btn:active {
+      transform: scale(0.97);
+    }
+
+    .sidebar-gradient {
+      background: linear-gradient(180deg, #2C4356 0%, #1E303E 100%);
+      box-shadow: 8px 0 30px -5px rgba(22, 36, 48, 0.25);
+    }
+
+    /* Custom Scrollbar */
+    #app-shell::-webkit-scrollbar,
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    #app-shell::-webkit-scrollbar-track,
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #app-shell::-webkit-scrollbar-thumb,
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(56, 107, 130, 0.28);
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app-shell">
+    <!-- Toast / Notification Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-[1000005] flex flex-col gap-2.5 max-w-sm w-[calc(100%-2rem)] pointer-events-none"></div>
+
+    <!-- Custom Confirm / Modal Container -->
+    <div id="modal-container" class="hidden fixed inset-0 z-[1000002] bg-[#1A2B38]/45 backdrop-blur-sm flex items-center justify-center p-4"></div>
+
+    <!-- Main Dynamic Application Root -->
+    <div id="root" class="min-h-full w-full"></div>
+  </div>
+
+  <!-- Application Module Script -->
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    // =========================================================================
+    // SAKLAR DEPLOYMENT WAJIB (UBAH IS_PREVIEW MENJADI false SAAT DEPLOY)
+    // =========================================================================
+    const IS_PREVIEW = false; // Ubah menjadi false SAAT DEPLOY
+    const SUPABASE_URL = "https://gtbmdihkkrblmyagxwzs.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0Ym1kaWhra3JibG15YWd4d3pzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTU1Nzk3OTYsImV4cCI6MjExMTE1NTc5Nn0.BiXhnCxQcYm5FjzNtrpX9dAJt5-4KBE86O-WEYfKAWQ";
+
+    // Inisialisasi Supabase Client hanya jika IS_PREVIEW === false
+    let supabase = null;
+    if (!IS_PREVIEW) {
+      supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+
+    // Registrasi Service Worker Blob untuk dukungan PWA Offline Shell
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        const CACHE_NAME = 'sertifikat-sekolah-v1';
+        self.addEventListener('install', (e) => self.skipWaiting());
+        self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
+        self.addEventListener('fetch', (e) => {
+          if (e.request.method !== 'GET') return;
+          e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+        });
+      `;
+      const swBlob = new Blob([swCode], { type: 'application/javascript' });
+      const swUrl = URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swUrl).catch(() => {});
+    }
+
+    // =========================================================================
+    // DATA REFERENSI KECAMATAN & DATA PREVIEW MINIMALIS (HANYA AKTIF SAAT PREVIEW)
+    // =========================================================================
+    const DEFAULT_16_KECAMATAN = [
+      "Kec. Sukamaju", "Kec. Harapan Jaya", "Kec. Mekarsari", "Kec. Cempaka Putih",
+      "Kec. Bina Karya", "Kec. Tirtajaya", "Kec. Karanganyar", "Kec. Sumberwaras",
+      "Kec. Kertamulya", "Kec. Margahayu", "Kec. Bojonggede", "Kec. Cikarang Barat",
+      "Kec. Tambun Selatan", "Kec. Setu", "Kec. Cibitung", "Kec. Babelan"
+    ];
+
+    // Hanya 2 contoh sekolah minimalis saat IS_PREVIEW = true (1 sudah mengisi, 1 belum mengisi)
+    const PREVIEW_INITIAL_SCHOOLS = [
+      {
+        npsn: "20210001",
+        nama_sekolah: "SDN Sukamaju 01",
+        alamat: "Jl. Pendidikan No. 12, Sukamaju",
+        kecamatan: "Kec. Sukamaju",
+        is_submitted: true,
+        has_certificate: "Ya",
+        certificate_number: "CERT-2026-0891",
+        document_url: "https://placehold.co/800x600/2C4356/E8EEF2?text=Pratinjau+Sertifikat+SDN+Sukamaju+01",
+        submitted_at: new Date().toISOString()
+      },
+      {
+        npsn: "20210002",
+        nama_sekolah: "SMPN Harapan Jaya 02",
+        alamat: "Jl. Merdeka Raya No. 45, Harapan Jaya",
+        kecamatan: "Kec. Harapan Jaya",
+        is_submitted: false,
+        has_certificate: null,
+        certificate_number: null,
+        document_url: null,
+        submitted_at: null
+      }
+    ];
+
+    // =========================================================================
+    // STATE APLIKASI TERPUSAT
+    // =========================================================================
+    const state = {
+      role: null, // 'admin' | 'school' | null
+      adminUser: null,
+      currentSchool: null,
+      schools: IS_PREVIEW ? structuredClone(PREVIEW_INITIAL_SCHOOLS) : [],
+      activeAdminTab: 'dashboard', // 'dashboard' | 'schools'
+      loginTab: 'school', // 'school' | 'admin'
+      loading: false,
+      // Filter & Pencarian Admin
+      searchQuery: '',
+      filterKecamatan: 'ALL',
+      filterStatus: 'ALL', // 'ALL' | 'SUBMITTED' | 'PENDING'
+      // Form State Portal Sekolah
+      schoolAnswer: null, // 'Ya' | 'Belum'
+      schoolCertNumber: '',
+      schoolFile: null,
+      // Chart instances
+      barChartInstance: null,
+      donutChartInstance: null
+    };
+
+    // =========================================================================
+    // UTILITAS UI (TOAST, MODAL, FORMATTER)
+    // =========================================================================
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const id = 'toast-' + Date.now();
+      const colors = {
+        success: 'bg-[#2C4356] text-white border-[#8ABBC4]',
+        error: 'bg-rose-800 text-white border-rose-300',
+        info: 'bg-[#1E303E] text-slate-100 border-white/30'
+      };
+      const icons = {
+        success: 'check-circle-2',
+        error: 'alert-circle',
+        info: 'info'
+      };
+
+      const el = document.createElement('div');
+      el.id = id;
+      el.className = `pointer-events-auto flex items-center gap-3 px-4 py-3.5 rounded-2xl border shadow-xl backdrop-blur-md transition-all duration-300 transform translate-y-0 opacity-100 ${colors[type] || colors.info}`;
+      el.innerHTML = `
+        <i data-lucide="${icons[type] || 'info'}" class="w-5 h-5 shrink-0 text-[#8ABBC4]"></i>
+        <p class="text-xs sm:text-sm font-medium leading-snug flex-1">${escapeHtml(message)}</p>
+      `;
+      container.appendChild(el);
+      lucide.createIcons({ nodes: [el] });
+
+      setTimeout(() => {
+        el.classList.add('opacity-0', '-translate-y-2');
+        setTimeout(() => el.remove(), 300);
+      }, 3600);
+    }
+
+    function showModal({ title, bodyHtml, confirmText = 'Ya, Lanjutkan', cancelText = 'Batal', danger = false, onConfirm }) {
+      const modal = document.getElementById('modal-container');
+      modal.classList.remove('hidden');
+      modal.innerHTML = `
+        <div class="tactile-card w-full max-w-md rounded-3xl p-6 animate-[fadeIn_0.2s_ease-out]">
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <h3 class="text-lg font-bold text-[#1A2B38]">${escapeHtml(title)}</h3>
+            <button id="modal-close-x" class="p-1.5 rounded-full hover:bg-slate-300/50 text-[#475A68]">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+          <div class="text-sm text-[#475A68] mb-6 leading-relaxed">${bodyHtml}</div>
+          <div class="flex items-center justify-end gap-2.5">
+            ${cancelText ? `<button id="modal-cancel" class="px-4 py-2.5 rounded-full text-sm font-semibold text-[#475A68] bg-white/60 hover:bg-white/90 transition">${escapeHtml(cancelText)}</button>` : ''}
+            <button id="modal-confirm" class="px-5 py-2.5 rounded-full text-sm font-semibold text-white tactile-btn ${danger ? 'bg-rose-600 hover:bg-rose-700' : 'bg-[#386B82] hover:bg-[#2C4356]'}">
+              ${escapeHtml(confirmText)}
+            </button>
+          </div>
+        </div>
+      `;
+      lucide.createIcons({ nodes: [modal] });
+
+      const close = () => {
+        modal.classList.add('hidden');
+        modal.innerHTML = '';
+      };
+
+      document.getElementById('modal-close-x')?.addEventListener('click', close);
+      document.getElementById('modal-cancel')?.addEventListener('click', close);
+      document.getElementById('modal-confirm')?.addEventListener('click', async () => {
+        close();
+        if (onConfirm) await onConfirm();
+      });
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function formatDateID(isoString) {
+      if (!isoString) return '-';
+      try {
+        return new Date(isoString).toLocaleString('id-ID', {
+          day: '2-digit', month: 'short', year: 'numeric',
+          hour: '2-digit', minute: '2-digit'
+        });
+      } catch {
+        return isoString;
+      }
+    }
+
+    // =========================================================================
+    // LAYER DATA & SUPABASE INTEGRATION
+    // =========================================================================
+    async function initApp() {
+      if (!IS_PREVIEW && supabase) {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session && session.user) {
+            state.role = 'admin';
+            state.adminUser = session.user;
+            await fetchSchoolsFromSupabase();
+          }
+        } catch (err) {
+          console.error('Session check error:', err);
+        }
+      }
+      render();
+    }
+
+    async function fetchSchoolsFromSupabase() {
+      if (IS_PREVIEW) return state.schools;
+      state.loading = true;
+      render();
+      try {
+        const { data, error } = await supabase
+          .from('schools')
+          .select('*')
+          .order('kecamatan', { ascending: true })
+          .order('nama_sekolah', { ascending: true });
+
+        if (error) throw error;
+        state.schools = data || [];
+      } catch (err) {
+        showToast('Gagal memuat data sekolah dari Supabase: ' + err.message, 'error');
+      } finally {
+        state.loading = false;
+        render();
+      }
+    }
+
+    // Login Sekolah via NPSN
+    async function handleSchoolLogin(npsnInput) {
+      const cleanNpsn = npsnInput.trim();
+      if (!cleanNpsn) {
+        showToast('Silakan masukkan NPSN sekolah Anda.', 'error');
+        return;
+      }
+
+      state.loading = true;
+      render();
+
+      try {
+        if (IS_PREVIEW) {
+          const found = state.schools.find(s => s.npsn === cleanNpsn);
+          if (!found) {
+            showToast('NPSN tidak ditemukan di database referensi.', 'error');
+          } else {
+            state.role = 'school';
+            state.currentSchool = found;
+            state.schoolAnswer = found.has_certificate || null;
+            state.schoolCertNumber = found.certificate_number || '';
+            state.schoolFile = null;
+            showToast(`Selamat datang, ${found.nama_sekolah}`, 'success');
+          }
+        } else {
+          // Wajib SELECT langsung ke tabel 'schools' berdasarkan NPSN
+          const { data, error } = await supabase
+            .from('schools')
+            .select('*')
+            .eq('npsn', cleanNpsn)
+            .maybeSingle();
+
+          if (error) throw error;
+          if (!data) {
+            showToast('NPSN tidak terdaftar. Hubungi Admin Dinas/Koordinator.', 'error');
+          } else {
+            state.role = 'school';
+            state.currentSchool = data;
+            state.schoolAnswer = data.has_certificate || null;
+            state.schoolCertNumber = data.certificate_number || '';
+            state.schoolFile = null;
+            showToast(`Berhasil masuk sebagai ${data.nama_sekolah}`, 'success');
+          }
+        }
+      } catch (err) {
+        showToast('Terjadi kesalahan saat verifikasi NPSN: ' + err.message, 'error');
+      } finally {
+        state.loading = false;
+        render();
+      }
+    }
+
+    // Login Admin via Email & Password
+    async function handleAdminLogin(email, password) {
+      if (!email || !password) {
+        showToast('Email dan kata sandi wajib diisi.', 'error');
+        return;
+      }
+
+      state.loading = true;
+      render();
+
+      try {
+        if (IS_PREVIEW) {
+          state.role = 'admin';
+          state.adminUser = { email };
+          state.activeAdminTab = 'dashboard';
+          showToast('Berhasil masuk ke Dashboard Admin (Mode Preview)', 'success');
+        } else {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password
+          });
+          if (error) throw error;
+          state.role = 'admin';
+          state.adminUser = data.user;
+          state.activeAdminTab = 'dashboard';
+          await fetchSchoolsFromSupabase();
+          showToast('Login Admin berhasil.', 'success');
+        }
+      } catch (err) {
+        showToast('Login Admin gagal: ' + err.message, 'error');
+      } finally {
+        state.loading = false;
+        render();
+      }
+    }
+
+    // Logout
+    async function handleLogout() {
+      if (!IS_PREVIEW && state.role === 'admin' && supabase) {
+        await supabase.auth.signOut();
+      }
+      state.role = null;
+      state.adminUser = null;
+      state.currentSchool = null;
+      state.schoolAnswer = null;
+      state.schoolCertNumber = '';
+      state.schoolFile = null;
+      showToast('Anda telah keluar dari sesi.', 'info');
+      render();
+    }
+
+    // Pengiriman Data Sertifikat oleh Sekolah
+    async function handleSchoolSubmit() {
+      const school = state.currentSchool;
+      if (!school || school.is_submitted) return;
+
+      if (!state.schoolAnswer) {
+        showToast('Silakan pilih jawaban "Ya" atau "Belum" terlebih dahulu.', 'error');
+        return;
+      }
+
+      if (state.schoolAnswer === 'Ya') {
+        if (!state.schoolCertNumber.trim()) {
+          showToast('Nomor Sertifikat wajib diisi jika menjawab Ya.', 'error');
+          return;
+        }
+        if (!state.schoolFile) {
+          showToast('Silakan unggah dokumen sertifikat (PDF/JPG/PNG).', 'error');
+          return;
+        }
+      }
+
+      state.loading = true;
+      render();
+
+      try {
+        let publicDocUrl = null;
+
+        if (state.schoolAnswer === 'Ya' && state.schoolFile) {
+          if (IS_PREVIEW) {
+            publicDocUrl = URL.createObjectURL(state.schoolFile);
+          } else {
+            const fileExt = state.schoolFile.name.split('.').pop();
+            const filePath = `${school.npsn}_${Date.now()}.${fileExt}`;
+
+            const { error: uploadError } = await supabase.storage
+              .from('certificates')
+              .upload(filePath, state.schoolFile, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const { data: urlData } = supabase.storage
+              .from('certificates')
+              .getPublicUrl(filePath);
+
+            publicDocUrl = urlData.publicUrl;
+          }
+        }
+
+        const payload = {
+          is_submitted: true,
+          has_certificate: state.schoolAnswer,
+          certificate_number: state.schoolAnswer === 'Ya' ? state.schoolCertNumber.trim() : null,
+          document_url: state.schoolAnswer === 'Ya' ? publicDocUrl : null,
+          submitted_at: new Date().toISOString()
+        };
+
+        if (IS_PREVIEW) {
+          const idx = state.schools.findIndex(s => s.npsn === school.npsn);
+          if (idx !== -1) {
+            state.schools[idx] = { ...state.schools[idx], ...payload };
+            state.currentSchool = state.schools[idx];
+          }
+        } else {
+          const { data, error } = await supabase
+            .from('schools')
+            .update(payload)
+            .eq('npsn', school.npsn)
+            .select()
+            .single();
+
+          if (error) throw error;
+          state.currentSchool = data;
+        }
+
+        showToast('Data sertifikat berhasil dikirim dan dikunci otomatis.', 'success');
+      } catch (err) {
+        showToast('Gagal mengirim data: ' + err.message, 'error');
+      } finally {
+        state.loading = false;
+        render();
+      }
+    }
+
+    // Reset Status Sekolah oleh Admin
+    async function handleResetSchool(npsn) {
+      state.loading = true;
+      render();
+
+      const resetPayload = {
+        is_submitted: false,
+        has_certificate: null,
+        certificate_number: null,
+        document_url: null,
+        submitted_at: null
+      };
+
+      try {
+        if (IS_PREVIEW) {
+          const idx = state.schools.findIndex(s => s.npsn === npsn);
+          if (idx !== -1) {
+            state.schools[idx] = { ...state.schools[idx], ...resetPayload };
+          }
+        } else {
+          const { error } = await supabase
+            .from('schools')
+            .update(resetPayload)
+            .eq('npsn', npsn);
+
+          if (error) throw error;
+          await fetchSchoolsFromSupabase();
+        }
+        showToast(`Status pengisian NPSN ${npsn} berhasil direset.`, 'success');
+      } catch (err) {
+        showToast('Gagal mereset status sekolah: ' + err.message, 'error');
+      } finally {
+        state.loading = false;
+        render();
+      }
+    }
+
+    // Hapus Sekolah oleh Admin
+    async function handleDeleteSchool(npsn) {
+      state.loading = true;
+      render();
+      try {
+        if (IS_PREVIEW) {
+          state.schools = state.schools.filter(s => s.npsn !== npsn);
+        } else {
+          const { error } = await supabase
+            .from('schools')
+            .delete()
+            .eq('npsn', npsn);
+          if (error) throw error;
+          await fetchSchoolsFromSupabase();
+        }
+        showToast(`Sekolah dengan NPSN ${npsn} telah dihapus.`, 'info');
+      } catch (err) {
+        showToast('Gagal menghapus sekolah: ' + err.message, 'error');
+      } finally {
+        state.loading = false;
+        render();
+      }
+    }
+
+    // Tambah Sekolah Manual oleh Admin
+    async function handleAddSingleSchool(newSchool) {
+      if (!newSchool.npsn || !newSchool.nama_sekolah || !newSchool.kecamatan) {
+        showToast('NPSN, Nama Sekolah, dan Kecamatan wajib diisi.', 'error');
+        return false;
+      }
+
+      state.loading = true;
+      render();
+
+      const record = {
+        npsn: String(newSchool.npsn).trim(),
+        nama_sekolah: String(newSchool.nama_sekolah).trim(),
+        alamat: String(newSchool.alamat || '').trim(),
+        kecamatan: String(newSchool.kecamatan).trim(),
+        is_submitted: false,
+        has_certificate: null,
+        certificate_number: null,
+        document_url: null,
+        submitted_at: null
+      };
+
+      try {
+        if (IS_PREVIEW) {
+          const exists = state.schools.some(s => s.npsn === record.npsn);
+          if (exists) {
+            showToast('NPSN sudah terdaftar dalam database.', 'error');
+            state.loading = false;
+            render();
+            return false;
+          }
+          state.schools.unshift(record);
+        } else {
+          const { error } = await supabase
+            .from('schools')
+            .upsert(record, { onConflict: 'npsn' });
+          if (error) throw error;
+          await fetchSchoolsFromSupabase();
+        }
+        showToast('Data sekolah berhasil ditambahkan.', 'success');
+        return true;
+      } catch (err) {
+        showToast('Gagal menyimpan sekolah: ' + err.message, 'error');
+        return false;
+      } finally {
+        state.loading = false;
+        render();
+      }
+    }
+
+    // Upload Massal Excel/CSV oleh Admin
+    async function handleBulkUploadExcel(file) {
+      if (!file) return;
+      state.loading = true;
+      render();
+
+      try {
+        const buffer = await file.arrayBuffer();
+        const workbook = XLSX.read(buffer, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+
+        if (!rows.length) {
+          showToast('File Excel/CSV kosong.', 'error');
+          state.loading = false;
+          render();
+          return;
+        }
+
+        // Normalisasi nama kolom (mendukung variasi: Nomor/NPSN, Nama Sekolah, Alamat, Kecamatan)
+        const parsedRecords = [];
+        for (const row of rows) {
+          const keys = Object.keys(row);
+          const findVal = (candidates) => {
+            const k = keys.find(key => candidates.includes(key.toLowerCase().trim()));
+            return k ? String(row[k]).trim() : '';
+          };
+
+          const npsn = findVal(['npsn', 'nomor', 'no', 'kode', 'nomor npsn']);
+          const nama = findVal(['nama sekolah', 'nama_sekolah', 'sekolah', 'nama']);
+          const alamat = findVal(['alamat', 'alamat sekolah', 'lokasi']);
+          const kecamatan = findVal(['kecamatan', 'kec']);
+
+          if (npsn && nama && kecamatan) {
+            parsedRecords.push({
+              npsn,
+              nama_sekolah: nama,
+              alamat,
+              kecamatan,
+              is_submitted: false,
+              has_certificate: null,
+              certificate_number: null,
+              document_url: null,
+              submitted_at: null
+            });
+          }
+        }
+
+        if (!parsedRecords.length) {
+          showToast('Format kolom tidak sesuai. Pastikan ada kolom: NPSN (atau Nomor), Nama Sekolah, Alamat, Kecamatan.', 'error');
+          state.loading = false;
+          render();
+          return;
+        }
+
+        if (IS_PREVIEW) {
+          const map = new Map(state.schools.map(s => [s.npsn, s]));
+          parsedRecords.forEach(rec => {
+            if (!map.has(rec.npsn)) {
+              map.set(rec.npsn, rec);
+            } else {
+              const old = map.get(rec.npsn);
+              map.set(rec.npsn, {
+                ...old,
+                nama_sekolah: rec.nama_sekolah,
+                alamat: rec.alamat,
+                kecamatan: rec.kecamatan
+              });
+            }
+          });
+          state.schools = Array.from(map.values());
+        } else {
+          // Upsert referensi sekolah tanpa menimpa status pengisian yang sudah ada
+          const upsertPayload = parsedRecords.map(r => ({
+            npsn: r.npsn,
+            nama_sekolah: r.nama_sekolah,
+            alamat: r.alamat,
+            kecamatan: r.kecamatan
+          }));
+          const { error } = await supabase
+            .from('schools')
+            .upsert(upsertPayload, { onConflict: 'npsn' });
+          if (error) throw error;
+          await fetchSchoolsFromSupabase();
+        }
+
+        showToast(`${parsedRecords.length} data referensi sekolah berhasil diimpor.`, 'success');
+      } catch (err) {
+        showToast('Gagal memproses file Excel/CSV: ' + err.message, 'error');
+      } finally {
+        state.loading = false;
+        render();
+      }
+    }
+
+    // Download Template Excel Referensi Sekolah
+    function downloadExcelTemplate() {
+      const templateData = [
+        { "Nomor": "20210011", "Nama Sekolah": "SDN Contoh 01", "Alamat": "Jl. Pendidikan No. 1", "Kecamatan": "Kec. Sukamaju" },
+        { "Nomor": "20210012", "Nama Sekolah": "SMPN Contoh 02", "Alamat": "Jl. Merdeka No. 10", "Kecamatan": "Kec. Harapan Jaya" }
+      ];
+      const ws = XLSX.utils.json_to_sheet(templateData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Template_Sekolah");
+      XLSX.writeFile(wb, "Template_Referensi_Sekolah.xlsx");
+      showToast('Template Excel berhasil diunduh.', 'success');
+    }
+
+    // =========================================================================
+    // EKSPOR LAPORAN EXCEL & PDF
+    // =========================================================================
+    function getFilteredSchools() {
+      return state.schools.filter(s => {
+        const matchSearch = !state.searchQuery ||
+          s.npsn.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
+          s.nama_sekolah.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
+          s.kecamatan.toLowerCase().includes(state.searchQuery.toLowerCase());
+
+        const matchKec = state.filterKecamatan === 'ALL' || s.kecamatan === state.filterKecamatan;
+
+        const matchStatus = state.filterStatus === 'ALL' ||
+          (state.filterStatus === 'SUBMITTED' && s.is_submitted) ||
+          (state.filterStatus === 'PENDING' && !s.is_submitted);
+
+        return matchSearch && matchKec && matchStatus;
+      });
+    }
+
+    function exportToExcel() {
+      const list = getFilteredSchools();
+      if (!list.length) {
+        showToast('Tidak ada data untuk diekspor sesuai filter saat ini.', 'error');
+        return;
+      }
+
+      const rows = list.map((s, index) => ({
+        "No": index + 1,
+        "NPSN": s.npsn,
+        "Nama Sekolah": s.nama_sekolah,
+        "Alamat": s.alamat || '-',
+        "Kecamatan": s.kecamatan,
+        "Status Pengisian": s.is_submitted ? 'Sudah Mengisi' : 'Belum Mengisi',
+        "Memiliki Sertifikat": s.has_certificate || '-',
+        "Nomor Sertifikat": s.certificate_number || '-',
+        "Tautan Dokumen": s.document_url || '-',
+        "Waktu Kirim": formatDateID(s.submitted_at)
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Rekap_Sertifikat");
+      XLSX.writeFile(wb, `Laporan_Sertifikat_Sekolah_${new Date().toISOString().slice(0,10)}.xlsx`);
+      showToast('Laporan Excel (.xlsx) berhasil diunduh.', 'success');
+    }
+
+    function exportToPDF() {
+      const list = getFilteredSchools();
+      if (!list.length) {
+        showToast('Tidak ada data untuk diekspor sesuai filter saat ini.', 'error');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+      doc.setFillColor(44, 67, 86);
+      doc.rect(0, 0, 297, 24, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('LAPORAN REKAPITULASI SERTIFIKAT SEKOLAH', 14, 11);
+
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      const filterLabel = `Filter Kecamatan: ${state.filterKecamatan === 'ALL' ? 'Semua Kecamatan' : state.filterKecamatan} | Status: ${state.filterStatus} | Dicetak: ${new Date().toLocaleDateString('id-ID')}`;
+      doc.text(filterLabel, 14, 18);
+
+      const tableBody = list.map((s, i) => [
+        i + 1,
+        s.npsn,
+        s.nama_sekolah,
+        s.kecamatan,
+        s.is_submitted ? 'Sudah Mengisi' : 'Belum Mengisi',
+        s.has_certificate || '-',
+        s.certificate_number || '-',
+        formatDateID(s.submitted_at)
+      ]);
+
+      doc.autoTable({
+        startY: 29,
+        head: [['No', 'NPSN', 'Nama Sekolah', 'Kecamatan', 'Status', 'Sertifikat', 'No. Sertifikat', 'Waktu Kirim']],
+        body: tableBody,
+        theme: 'grid',
+        headStyles: { fillColor: [56, 107, 130], textColor: 255, fontStyle: 'bold', fontSize: 8.5 },
+        bodyStyles: { fontSize: 8, textColor: [26, 43, 56] },
+        alternateRowStyles: { fillColor: [232, 238, 242] },
+        margin: { left: 14, right: 14 }
+      });
+
+      doc.save(`Laporan_Sertifikat_Sekolah_${new Date().toISOString().slice(0,10)}.pdf`);
+      showToast('Laporan PDF (.pdf) berhasil diunduh.', 'success');
+    }
+
+    // =========================================================================
+    // KALKULASI STATISTIK & GRAFIK (70% STACKED BAR 16 KECAMATAN + 30% DOUGHNUT)
+    // =========================================================================
+    function computeStatistics() {
+      const total = state.schools.length;
+      const submitted = state.schools.filter(s => s.is_submitted).length;
+      const pending = total - submitted;
+      const certYes = state.schools.filter(s => s.is_submitted && s.has_certificate === 'Ya').length;
+      const certNo = state.schools.filter(s => s.is_submitted && s.has_certificate === 'Belum').length;
+
+      // Kumpulkan daftar 16 kecamatan (prioritaskan kecamatan dari data aktual, lengkapi hingga 16 dari DEFAULT_16_KECAMATAN)
+      const uniqueFromData = Array.from(new Set(state.schools.map(s => s.kecamatan).filter(Boolean)));
+      const kecamatanList = [...uniqueFromData];
+      for (const defKec of DEFAULT_16_KECAMATAN) {
+        if (kecamatanList.length >= 16) break;
+        if (!kecamatanList.includes(defKec)) {
+          kecamatanList.push(defKec);
+        }
+      }
+      const final16 = kecamatanList.slice(0, 16);
+
+      const barLabels = final16.map(k => k.replace(/^Kec\.\s*/i, ''));
+      const barSubmittedData = final16.map(kec =>
+        state.schools.filter(s => s.kecamatan === kec && s.is_submitted).length
+      );
+      const barPendingData = final16.map(kec =>
+        state.schools.filter(s => s.kecamatan === kec && !s.is_submitted).length
+      );
+
+      return {
+        total,
+        submitted,
+        pending,
+        certYes,
+        certNo,
+        barLabels,
+        barSubmittedData,
+        barPendingData
+      };
+    }
+
+    function renderCharts() {
+      const barCanvas = document.getElementById('stackedBarChart');
+      const donutCanvas = document.getElementById('donutChart');
+      if (!barCanvas || !donutCanvas) return;
+
+      const stats = computeStatistics();
+
+      if (state.barChartInstance) state.barChartInstance.destroy();
+      if (state.donutChartInstance) state.donutChartInstance.destroy();
+
+      // 1. Stacked Bar Chart (16 Kecamatan: Biru = Sudah Mengisi, Silver = Belum Mengisi)
+      state.barChartInstance = new Chart(barCanvas, {
+        type: 'bar',
+        data: {
+          labels: stats.barLabels,
+          datasets: [
+            {
+              label: 'Sudah Mengisi',
+              data: stats.barSubmittedData,
+              backgroundColor: '#386B82', // Biru Teal
+              borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 6, bottomRight: 6 },
+              borderSkipped: false,
+              barPercentage: 0.65,
+              categoryPercentage: 0.8
+            },
+            {
+              label: 'Belum Mengisi',
+              data: stats.barPendingData,
+              backgroundColor: '#B8C4CC', // Silver
+              borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 },
+              borderSkipped: false,
+              barPercentage: 0.65,
+              categoryPercentage: 0.8
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'end',
+              labels: {
+                usePointStyle: true,
+                pointStyle: 'circle',
+                padding: 16,
+                color: '#1A2B38',
+                font: { family: 'Plus Jakarta Sans', size: 12, weight: '600' }
+              }
+            },
+            tooltip: {
+              backgroundColor: '#1E303E',
+              titleFont: { family: 'Plus Jakarta Sans', size: 12, weight: '700' },
+              bodyFont: { family: 'Plus Jakarta Sans', size: 12 },
+              padding: 10,
+              cornerRadius: 12
+            }
+          },
+          scales: {
+            x: {
+              stacked: true,
+              grid: { display: false },
+              ticks: {
+                color: '#475A68',
+                font: { family: 'Plus Jakarta Sans', size: 10, weight: '500' },
+                maxRotation: 45,
+                minRotation: 35
+              }
+            },
+            y: {
+              stacked: true,
+              beginAtZero: true,
+              ticks: {
+                stepSize: 1,
+                color: '#788A96',
+                font: { family: 'Plus Jakarta Sans', size: 11 }
+              },
+              grid: {
+                color: 'rgba(148, 163, 184, 0.22)',
+                drawBorder: false
+              }
+            }
+          }
+        }
+      });
+
+      // 2. Doughnut Chart (Perbandingan Ya vs Belum)
+      const hasAnyResponse = (stats.certYes + stats.certNo) > 0;
+      state.donutChartInstance = new Chart(donutCanvas, {
+        type: 'doughnut',
+        data: {
+          labels: ['Ya (Memiliki Sertifikat)', 'Belum Memiliki'],
+          datasets: [{
+            data: hasAnyResponse ? [stats.certYes, stats.certNo] : [0, 0],
+            backgroundColor: ['#386B82', '#8A8FB5'],
+            borderColor: '#E8EEF2',
+            borderWidth: 3,
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '66%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#1E303E',
+              padding: 10,
+              cornerRadius: 12
+            }
+          }
+        }
+      });
+    }
+
+    // =========================================================================
+    // RENDER VIEWS (LOGIN, PORTAL SEKOLAH, DASHBOARD ADMIN)
+    // =========================================================================
+    function renderPreviewBanner() {
+      if (!IS_PREVIEW) return '';
+      return `
+        <div class="bg-[#1E303E] text-slate-100 px-4 py-2 text-xs flex flex-wrap items-center justify-between gap-2 border-b border-white/15">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-semibold border border-amber-400/30">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+              Mode Preview Aktif
+            </span>
+            <span class="text-slate-300 hidden sm:inline">Menggunakan memori lokal browser (2 contoh sekolah).</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button data-quick-login="school-pending" class="px-2.5 py-1 rounded-full bg-[#386B82] hover:bg-[#46829d] text-white font-medium transition">
+              Pintas Sekolah (Belum Isi)
+            </button>
+            <button data-quick-login="school-done" class="px-2.5 py-1 rounded-full bg-[#8ABBC4]/25 hover:bg-[#8ABBC4]/40 text-[#8ABBC4] font-medium transition">
+              Pintas Sekolah (Terkunci)
+            </button>
+            <button data-quick-login="admin" class="px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white font-medium transition">
+              Pintas Admin
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderLoginView() {
+      return `
+        ${renderPreviewBanner()}
+        <div class="min-h-[calc(100vh-40px)] flex items-center justify-center p-4 sm:p-6">
+          <div class="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 rounded-3xl overflow-hidden shadow-2xl border border-white/75">
+            
+            <!-- Left Visual Panel (Dark Slate Tactile) -->
+            <div class="lg:col-span-5 sidebar-gradient p-7 sm:p-9 text-slate-100 flex flex-col justify-between relative overflow-hidden">
+              <div class="relative z-10">
+                <div class="w-12 h-12 rounded-2xl bg-[#8ABBC4]/20 border border-[#8ABBC4]/40 flex items-center justify-center mb-6 shadow-inner">
+                  <i data-lucide="award" class="w-6 h-6 text-[#8ABBC4]"></i>
+                </div>
+                <span class="inline-block px-3 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase bg-white/10 text-[#8ABBC4] mb-3">
+                  Sistem Pendataan Terpadu
+                </span>
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-tight leading-snug text-white mb-3">
+                  Dashboard Sertifikat Sekolah
+                </h1>
+                <p class="text-sm text-slate-300 leading-relaxed">
+                  Portal pelaporan status kepemilikan dan pengarsipan dokumen sertifikat satuan pendidikan secara terintegrasi dan real-time.
+                </p>
+              </div>
+
+              <div class="relative z-10 mt-8 pt-6 border-t border-white/10 space-y-3 text-xs text-slate-300">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-6 h-6 rounded-full bg-[#386B82] flex items-center justify-center shrink-0">
+                    <i data-lucide="school" class="w-3.5 h-3.5 text-white"></i>
+                  </div>
+                  <span>Sekolah masuk cepat menggunakan <strong>NPSN</strong></span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                  <div class="w-6 h-6 rounded-full bg-[#386B82] flex items-center justify-center shrink-0">
+                    <i data-lucide="lock" class="w-3.5 h-3.5 text-white"></i>
+                  </div>
+                  <span>Penguncian data otomatis setelah dikirim</span>
+                </div>
+              </div>
+
+              <!-- Decorative Blur Orb -->
+              <div class="absolute -bottom-16 -right-16 w-48 h-48 rounded-full bg-[#8ABBC4]/15 blur-2xl pointer-events-none"></div>
+            </div>
+
+            <!-- Right Form Panel (Matte Glassmorphism) -->
+            <div class="lg:col-span-7 tactile-card p-7 sm:p-10 flex flex-col justify-center">
+              <!-- Switcher Tabs -->
+              <div class="tactile-inset p-1.5 rounded-full grid grid-cols-2 mb-7">
+                <button id="tab-login-school" class="py-2.5 px-4 rounded-full text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 ${state.loginTab === 'school' ? 'bg-[#2C4356] text-white shadow-md' : 'text-[#475A68] hover:text-[#1A2B38]'}">
+                  <i data-lucide="building-2" class="w-4 h-4"></i>
+                  Portal Sekolah
+                </button>
+                <button id="tab-login-admin" class="py-2.5 px-4 rounded-full text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 ${state.loginTab === 'admin' ? 'bg-[#2C4356] text-white shadow-md' : 'text-[#475A68] hover:text-[#1A2B38]'}">
+                  <i data-lucide="shield-check" class="w-4 h-4"></i>
+                  Login Admin
+                </button>
+              </div>
+
+              ${state.loginTab === 'school' ? `
+                <form id="form-school-login" class="space-y-5">
+                  <div>
+                    <h2 class="text-xl font-bold text-[#1A2B38]">Masuk Sebagai Sekolah</h2>
+                    <p class="text-xs sm:text-sm text-[#475A68] mt-1">Masukkan 8 digit Nomor Pokok Sekolah Nasional (NPSN) yang terdaftar.</p>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-[#475A68] mb-2">NPSN Sekolah</label>
+                    <div class="relative">
+                      <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-[#788A96]">
+                        <i data-lucide="hash" class="w-4 h-4"></i>
+                      </span>
+                      <input type="text" id="input-npsn" inputmode="numeric" placeholder="Contoh: 20210001" required
+                        class="w-full pl-11 pr-4 py-3.5 rounded-2xl tactile-inset text-sm font-semibold text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
+                    </div>
+                  </div>
+
+                  <button type="submit" ${state.loading ? 'disabled' : ''}
+                    class="w-full py-3.5 px-6 rounded-full bg-[#386B82] hover:bg-[#2C4356] text-white font-semibold text-sm tactile-btn flex items-center justify-center gap-2">
+                    <span>${state.loading ? 'Memeriksa NPSN...' : 'Masuk ke Portal Sekolah'}</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                  </button>
+                </form>
+              ` : `
+                <form id="form-admin-login" class="space-y-4">
+                  <div>
+                    <h2 class="text-xl font-bold text-[#1A2B38]">Masuk Administrator</h2>
+                    <p class="text-xs sm:text-sm text-[#475A68] mt-1">Kelola database referensi sekolah, pantau grafik kecamatan, dan unduh laporan.</p>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-[#475A68] mb-1.5">Email Admin</label>
+                    <div class="relative">
+                      <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-[#788A96]">
+                        <i data-lucide="mail" class="w-4 h-4"></i>
+                      </span>
+                      <input type="email" id="input-admin-email" placeholder="admin@sekolah.go.id" required
+                        class="w-full pl-11 pr-4 py-3 rounded-2xl tactile-inset text-sm font-medium text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-[#475A68] mb-1.5">Kata Sandi</label>
+                    <div class="relative">
+                      <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-[#788A96]">
+                        <i data-lucide="key-round" class="w-4 h-4"></i>
+                      </span>
+                      <input type="password" id="input-admin-password" placeholder="••••••••" required
+                        class="w-full pl-11 pr-4 py-3 rounded-2xl tactile-inset text-sm font-medium text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
+                    </div>
+                  </div>
+
+                  <button type="submit" ${state.loading ? 'disabled' : ''}
+                    class="w-full py-3.5 px-6 rounded-full bg-[#2C4356] hover:bg-[#1E303E] text-white font-semibold text-sm tactile-btn flex items-center justify-center gap-2 mt-2">
+                    <span>${state.loading ? 'Mengautentikasi...' : 'Masuk Dashboard Admin'}</span>
+                    <i data-lucide="log-in" class="w-4 h-4"></i>
+                  </button>
+                </form>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // VIEW PORTAL SEKOLAH (SETELAH LOGIN NPSN)
+    // =========================================================================
+    function renderSchoolPortalView() {
+      const s = state.currentSchool;
+      if (!s) return renderLoginView();
+
+      return `
+        ${renderPreviewBanner()}
+        <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 pb-20 space-y-6">
+          
+          <!-- Top Bar -->
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-2xl bg-[#2C4356] text-[#8ABBC4] flex items-center justify-center shadow-md">
+                <i data-lucide="award" class="w-6 h-6"></i>
+              </div>
+              <div>
+                <h1 class="text-lg sm:text-xl font-bold text-[#1A2B38] tracking-tight">Portal Sertifikat Sekolah</h1>
+                <p class="text-xs text-[#475A68]">Pelaporan Status Sertifikat Satuan Pendidikan</p>
+              </div>
+            </div>
+
+            <button id="btn-logout" class="px-4 py-2.5 rounded-full bg-white/75 hover:bg-white text-[#1A2B38] text-xs sm:text-sm font-semibold border border-white shadow-sm flex items-center gap-2 transition">
+              <i data-lucide="log-out" class="w-4 h-4 text-rose-600"></i>
+              <span>Keluar</span>
+            </button>
+          </div>
+
+          <!-- Hero Profile Sekolah Banner -->
+          <div class="sidebar-gradient rounded-3xl p-6 sm:p-7 text-white relative overflow-hidden">
+            <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="space-y-1.5">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#8ABBC4] text-xs font-semibold">
+                  <i data-lucide="hash" class="w-3.5 h-3.5"></i>
+                  <span>NPSN: ${escapeHtml(s.npsn)}</span>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold tracking-tight">${escapeHtml(s.nama_sekolah)}</h2>
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-slate-300 pt-1">
+                  <span class="inline-flex items-center gap-1.5">
+                    <i data-lucide="map-pin" class="w-4 h-4 text-[#8ABBC4]"></i>
+                    ${escapeHtml(s.kecamatan)}
+                  </span>
+                  <span class="inline-flex items-center gap-1.5">
+                    <i data-lucide="navigation" class="w-4 h-4 text-[#8ABBC4]"></i>
+                    ${escapeHtml(s.alamat || 'Alamat belum dilengkapi')}
+                  </span>
+                </div>
+              </div>
+
+              <div class="shrink-0">
+                ${s.is_submitted ? `
+                  <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-xs font-semibold">
+                    <i data-lucide="lock" class="w-4 h-4"></i>
+                    Status: Terkunci (Sudah Mengisi)
+                  </span>
+                ` : `
+                  <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-400/20 border border-amber-300/40 text-amber-200 text-xs font-semibold">
+                    <i data-lucide="clock" class="w-4 h-4"></i>
+                    Status: Belum Mengisi
+                  </span>
+                `}
+              </div>
+            </div>
+            <div class="absolute -right-10 -bottom-10 w-44 h-44 rounded-full bg-[#8ABBC4]/15 blur-2xl pointer-events-none"></div>
+          </div>
+
+          <!-- Conditional Form vs Read-Only Locked View -->
+          ${s.is_submitted ? `
+            <!-- MODE TERKUNCI (READ-ONLY) -->
+            <div class="tactile-card rounded-3xl p-6 sm:p-8 space-y-6">
+              <div class="flex items-start gap-3.5 p-4 rounded-2xl bg-[#386B82]/10 border border-[#386B82]/25">
+                <div class="w-10 h-10 rounded-xl bg-[#386B82] text-white flex items-center justify-center shrink-0 mt-0.5">
+                  <i data-lucide="shield-check" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <h3 class="text-sm sm:text-base font-bold text-[#1A2B38]">Data Telah Dikirim & Dikunci Otomatis</h3>
+                  <p class="text-xs sm:text-sm text-[#475A68] mt-0.5 leading-relaxed">
+                    Terima kasih telah melakukan pengisian. Data Anda saat ini hanya dapat dilihat (Read-Only). Pengiriman ulang hanya dapat dilakukan apabila tim Admin melakukan <strong>Reset Status</strong> untuk sekolah Anda.
+                  </p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="p-4 rounded-2xl bg-white/55 border border-white">
+                  <span class="text-xs font-medium text-[#788A96]">Kepemilikan Sertifikat Sekolah</span>
+                  <p class="text-lg font-bold text-[#1A2B38] mt-1 flex items-center gap-2">
+                    ${s.has_certificate === 'Ya'
+                      ? '<span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Ya, Memiliki Sertifikat'
+                      : '<span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span> Belum Memiliki Sertifikat'}
+                  </p>
+                </div>
+
+                <div class="p-4 rounded-2xl bg-white/55 border border-white">
+                  <span class="text-xs font-medium text-[#788A96]">Waktu Pengiriman</span>
+                  <p class="text-base font-bold text-[#1A2B38] mt-1">${formatDateID(s.submitted_at)}</p>
+                </div>
+
+                ${s.has_certificate === 'Ya' ? `
+                  <div class="p-4 rounded-2xl bg-white/55 border border-white">
+                    <span class="text-xs font-medium text-[#788A96]">Nomor Sertifikat</span>
+                    <p class="text-base font-bold text-[#386B82] mt-1">${escapeHtml(s.certificate_number || '-')}</p>
+                  </div>
+
+                  <div class="p-4 rounded-2xl bg-white/55 border border-white flex items-center justify-between gap-3">
+                    <div>
+                      <span class="text-xs font-medium text-[#788A96]">Dokumen Sertifikat</span>
+                      <p class="text-sm font-semibold text-[#1A2B38] mt-0.5">Terlampir di Sistem</p>
+                    </div>
+                    ${s.document_url ? `
+                      <a href="${escapeHtml(s.document_url)}" target="_blank" rel="noopener noreferrer"
+                        class="px-4 py-2 rounded-full bg-[#386B82] hover:bg-[#2C4356] text-white text-xs font-semibold tactile-btn inline-flex items-center gap-1.5">
+                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                        Lihat Dokumen
+                      </a>
+                    ` : '<span class="text-xs text-[#788A96]">Tidak ada file</span>'}
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          ` : `
+            <!-- FORMULIR PENGISIAN AKTIF -->
+            <div class="tactile-card rounded-3xl p-6 sm:p-8 space-y-6">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-[#386B82]">Pertanyaan Wajib</span>
+                <h3 class="text-lg sm:text-xl font-bold text-[#1A2B38] mt-1">
+                  Apakah sekolah sudah memiliki Sertifikat Sekolah?
+                </h3>
+                <p class="text-xs sm:text-sm text-[#475A68] mt-1">
+                  Pilih salah satu jawaban di bawah ini. Setelah dikirim, formulir akan otomatis terkunci.
+                </p>
+              </div>
+
+              <!-- Pilihan Ya atau Belum -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button type="button" data-choose-answer="Ya"
+                  class="p-5 rounded-2xl text-left border-2 transition-all flex items-center gap-4 ${state.schoolAnswer === 'Ya'
+                    ? 'bg-[#386B82] text-white border-[#386B82] shadow-lg'
+                    : 'bg-white/60 hover:bg-white/90 text-[#1A2B38] border-white'}">
+                  <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${state.schoolAnswer === 'Ya' ? 'bg-white/20 text-white' : 'bg-[#386B82]/15 text-[#386B82]'}">
+                    <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+                  </div>
+                  <div>
+                    <div class="font-bold text-base">Ya, Sudah Memiliki</div>
+                    <div class="text-xs ${state.schoolAnswer === 'Ya' ? 'text-slate-200' : 'text-[#475A68]'}">Isi nomor & unggah dokumen</div>
+                  </div>
+                </button>
+
+                <button type="button" data-choose-answer="Belum"
+                  class="p-5 rounded-2xl text-left border-2 transition-all flex items-center gap-4 ${state.schoolAnswer === 'Belum'
+                    ? 'bg-[#2C4356] text-white border-[#2C4356] shadow-lg'
+                    : 'bg-white/60 hover:bg-white/90 text-[#1A2B38] border-white'}">
+                  <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${state.schoolAnswer === 'Belum' ? 'bg-white/20 text-white' : 'bg-slate-400/20 text-[#475A68]'}">
+                    <i data-lucide="x-circle" class="w-6 h-6"></i>
+                  </div>
+                  <div>
+                    <div class="font-bold text-base">Belum Memiliki</div>
+                    <div class="text-xs ${state.schoolAnswer === 'Belum' ? 'text-slate-200' : 'text-[#475A68]'}">Langsung kirim konfirmasi</div>
+                  </div>
+                </button>
+              </div>
+
+              <!-- Jika memilih "Ya": Input Nomor Sertifikat + Upload Dokumen -->
+              ${state.schoolAnswer === 'Ya' ? `
+                <div class="p-5 sm:p-6 rounded-2xl bg-white/55 border border-white space-y-5 animate-[fadeIn_0.25s_ease-out]">
+                  <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[#475A68] mb-2">
+                      Nomor Sertifikat Sekolah <span class="text-rose-600">*</span>
+                    </label>
+                    <input type="text" id="input-cert-number" value="${escapeHtml(state.schoolCertNumber)}"
+                      placeholder="Masukkan nomor yang tertera pada sertifikat..."
+                      class="w-full px-4 py-3.5 rounded-2xl tactile-inset text-sm font-semibold text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-[#475A68] mb-2">
+                      Upload Dokumen Sertifikat (PDF / JPG / PNG) <span class="text-rose-600">*</span>
+                    </label>
+                    <label for="input-cert-file"
+                      class="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-[#386B82]/40 bg-[#E8EEF2]/70 hover:bg-white/80 cursor-pointer transition text-center">
+                      <div class="w-12 h-12 rounded-2xl bg-[#386B82]/15 text-[#386B82] flex items-center justify-center mb-2">
+                        <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                      </div>
+                      <span class="text-sm font-semibold text-[#1A2B38]">
+                        ${state.schoolFile ? escapeHtml(state.schoolFile.name) : 'Klik untuk memilih file dokumen sertifikat'}
+                      </span>
+                      <span class="text-xs text-[#788A96] mt-1">
+                        ${state.schoolFile ? `Ukuran: ${(state.schoolFile.size / 1024).toFixed(1)} KB` : 'Format didukung: PDF, JPG, PNG (Maks. 5MB)'}
+                      </span>
+                      <input type="file" id="input-cert-file" accept=".pdf,image/jpeg,image/png" class="hidden" />
+                    </label>
+                  </div>
+                </div>
+              ` : ''}
+
+              <!-- Tombol Kirim (Muncul setelah memilih Ya atau Belum) -->
+              ${state.schoolAnswer ? `
+                <div class="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-slate-300/40">
+                  <p class="text-xs text-[#475A68] flex items-center gap-1.5">
+                    <i data-lucide="info" class="w-4 h-4 text-[#386B82] shrink-0"></i>
+                    Pastikan isian benar sebelum menekan tombol kirim.
+                  </p>
+                  <button type="button" id="btn-submit-school" ${state.loading ? 'disabled' : ''}
+                    class="px-7 py-3.5 rounded-full bg-[#386B82] hover:bg-[#2C4356] text-white font-semibold text-sm tactile-btn flex items-center justify-center gap-2">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                    <span>${state.loading ? 'Mengirim Data...' : 'Kirim Data Sertifikat'}</span>
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // VIEW DASHBOARD ADMIN (BENTO GRID + 70:30 CHARTS + CRUD & EXCEL/PDF)
+    // =========================================================================
+    function renderAdminDashboardView() {
+      const stats = computeStatistics();
+      const filteredSchools = getFilteredSchools();
+      const allKecamatanOptions = Array.from(new Set([
+        ...DEFAULT_16_KECAMATAN,
+        ...state.schools.map(s => s.kecamatan).filter(Boolean)
+      ]));
+
+      const pctYes = (stats.certYes + stats.certNo) > 0
+        ? Math.round((stats.certYes / (stats.certYes + stats.certNo)) * 100)
+        : 0;
+      const pctNo = (stats.certYes + stats.certNo) > 0
+        ? 100 - pctYes
+        : 0;
+
+      return `
+        ${renderPreviewBanner()}
+        <div class="min-h-screen flex flex-col lg:flex-row">
+          
+          <!-- DESKTOP FIXED LEFT SIDEBAR (Gelap #2C4356 -> #1E303E) -->
+          <aside class="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 ${IS_PREVIEW ? 'lg:top-[37px]' : 'lg:top-0'} sidebar-gradient text-slate-100 rounded-r-3xl p-5 justify-between z-20">
+            <div>
+              <!-- Admin Avatar & Greeting -->
+              <div class="flex flex-col items-center text-center pt-3 pb-6 border-b border-white/10">
+                <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-[#386B82] to-[#8ABBC4] p-0.5 shadow-lg mb-3">
+                  <div class="w-full h-full rounded-full bg-[#1E303E] flex items-center justify-center text-[#8ABBC4]">
+                    <i data-lucide="user-cog" class="w-7 h-7"></i>
+                  </div>
+                </div>
+                <h2 class="text-base font-bold text-white">Halo, Admin!</h2>
+                <p class="text-[11px] text-slate-400 truncate max-w-[190px] mt-0.5">
+                  ${escapeHtml(state.adminUser?.email || 'Administrator Sistem')}
+                </p>
+              </div>
+
+              <!-- Navigation Pill Items -->
+              <nav class="mt-6 space-y-2.5">
+                <button data-admin-tab="dashboard"
+                  class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${state.activeAdminTab === 'dashboard'
+                    ? 'bg-[#DCE4E8] text-[#1A2B38] shadow-md'
+                    : 'text-slate-300 hover:bg-white/10 hover:text-white'}">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center ${state.activeAdminTab === 'dashboard' ? 'bg-[#386B82] text-white' : 'bg-white/10 text-[#8ABBC4]'}">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                  </div>
+                  <span>Dashboard & Grafik</span>
+                </button>
+
+                <button data-admin-tab="schools"
+                  class="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${state.activeAdminTab === 'schools'
+                    ? 'bg-[#DCE4E8] text-[#1A2B38] shadow-md'
+                    : 'text-slate-300 hover:bg-white/10 hover:text-white'}">
+                  <div class="w-8 h-8 rounded-xl flex items-center justify-center ${state.activeAdminTab === 'schools' ? 'bg-[#386B82] text-white' : 'bg-white/10 text-[#8ABBC4]'}">
+                    <i data-lucide="school" class="w-4 h-4"></i>
+                  </div>
+                  <span>Data & Monitoring</span>
+                </button>
+              </nav>
+            </div>
+
+            <!-- Inset Bottom Card -->
+            <div class="p-4 rounded-2xl bg-[#162430]/70 border border-white/10 text-center space-y-3">
+              <div class="w-9 h-9 rounded-xl bg-[#8ABBC4]/20 text-[#8ABBC4] flex items-center justify-center mx-auto">
+                <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="text-xs font-bold text-white">Ekspor Rekapitulasi</div>
+                <div class="text-[11px] text-slate-400 mt-0.5">Unduh format Excel & PDF</div>
+              </div>
+              <button id="btn-logout-desktop" class="w-full py-2 px-3 rounded-full bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-400/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                <span>Keluar Sesi</span>
+              </button>
+            </div>
+          </aside>
+
+          <!-- MOBILE FLOATING BOTTOM NAVIGATION BAR -->
+          <nav class="lg:hidden fixed bottom-4 left-4 right-4 z-30 sidebar-gradient rounded-full px-3 py-2 flex items-center justify-around border border-white/15 shadow-2xl">
+            <button data-admin-tab="dashboard"
+              class="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition ${state.activeAdminTab === 'dashboard' ? 'bg-[#DCE4E8] text-[#1A2B38]' : 'text-slate-300'}">
+              <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+              <span>Dashboard</span>
+            </button>
+            <button data-admin-tab="schools"
+              class="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition ${state.activeAdminTab === 'schools' ? 'bg-[#DCE4E8] text-[#1A2B38]' : 'text-slate-300'}">
+              <i data-lucide="school" class="w-4 h-4"></i>
+              <span>Data Sekolah</span>
+            </button>
+            <button id="btn-logout-mobile" class="p-2.5 rounded-full text-rose-300 hover:bg-white/10" title="Keluar">
+              <i data-lucide="log-out" class="w-4 h-4"></i>
+            </button>
+          </nav>
+
+          <!-- MAIN WORKSPACE AREA -->
+          <main class="flex-1 lg:pl-64">
+            <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 pb-28 lg:pb-10 space-y-6">
+              
+              <!-- TOP HEADER BAR -->
+              <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h1 class="text-2xl font-bold text-[#1A2B38] tracking-tight">
+                    ${state.activeAdminTab === 'dashboard' ? 'Dashboard Sertifikat Sekolah' : 'Database & Monitoring Sekolah'}
+                  </h1>
+                  <p class="text-xs sm:text-sm text-[#475A68]">
+                    Rekapitulasi pendataan sertifikat sekolah di 16 Kecamatan
+                  </p>
+                </div>
+
+                <!-- Search & Export Quick Actions -->
+                <div class="flex flex-wrap items-center gap-2.5">
+                  <div class="relative flex-1 sm:w-56">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-[#788A96]">
+                      <i data-lucide="search" class="w-4 h-4"></i>
+                    </span>
+                    <input type="text" id="admin-global-search" value="${escapeHtml(state.searchQuery)}"
+                      placeholder="Cari NPSN / Sekolah..."
+                      class="w-full pl-10 pr-4 py-2.5 rounded-full tactile-inset text-xs font-medium text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
+                  </div>
+
+                  <button id="btn-export-excel" class="px-4 py-2.5 rounded-full bg-[#386B82] hover:bg-[#2C4356] text-white text-xs font-semibold tactile-btn inline-flex items-center gap-1.5">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                    <span>Excel</span>
+                  </button>
+
+                  <button id="btn-export-pdf" class="px-4 py-2.5 rounded-full bg-[#2C4356] hover:bg-[#1E303E] text-white text-xs font-semibold tactile-btn inline-flex items-center gap-1.5">
+                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                    <span>PDF</span>
+                  </button>
+                </div>
+              </header>
+
+              ${state.activeAdminTab === 'dashboard' ? `
+                <!-- TAB 1: DASHBOARD & GRAFIK (70% : 30%) -->
+                
+                <!-- 4 KPI SUMMARY CARDS (BENTO STYLE) -->
+                <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                  <!-- KPI 1: Total Sekolah -->
+                  <div class="rounded-2xl p-5 bg-[#9AC5CD]/85 border-t border-l border-white/80 shadow-md flex flex-col justify-between">
+                    <div class="w-10 h-10 rounded-xl bg-white/65 text-[#1A2B38] flex items-center justify-center shadow-sm mb-3">
+                      <i data-lucide="building-2" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                      <div class="text-xs font-semibold text-[#1A2B38]/80">Total Referensi Sekolah</div>
+                      <div class="text-2xl sm:text-3xl font-extrabold text-[#1A2B38] tabular-nums mt-0.5">${stats.total}</div>
+                      <div class="text-[11px] font-medium text-[#1A2B38]/75 mt-1">Tersebar di 16 Kecamatan</div>
+                    </div>
+                  </div>
+
+                  <!-- KPI 2: Sudah Mengisi -->
+                  <div class="rounded-2xl p-5 bg-[#D2E3ED]/90 border-t border-l border-white/80 shadow-md flex flex-col justify-between">
+                    <div class="w-10 h-10 rounded-xl bg-[#386B82] text-white flex items-center justify-center shadow-sm mb-3">
+                      <i data-lucide="check-square" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                      <div class="text-xs font-semibold text-[#475A68]">Sudah Mengisi (Biru)</div>
+                      <div class="text-2xl sm:text-3xl font-extrabold text-[#1A2B38] tabular-nums mt-0.5">${stats.submitted}</div>
+                      <div class="text-[11px] font-semibold text-[#386B82] mt-1">
+                        ${stats.total > 0 ? Math.round((stats.submitted / stats.total) * 100) : 0}% partisipasi masuk
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- KPI 3: Belum Mengisi -->
+                  <div class="rounded-2xl p-5 bg-[#E4EBF0]/90 border-t border-l border-white/80 shadow-md flex flex-col justify-between">
+                    <div class="w-10 h-10 rounded-xl bg-[#B8C4CC] text-[#1A2B38] flex items-center justify-center shadow-sm mb-3">
+                      <i data-lucide="hourglass" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                      <div class="text-xs font-semibold text-[#475A68]">Belum Mengisi (Silver)</div>
+                      <div class="text-2xl sm:text-3xl font-extrabold text-[#1A2B38] tabular-nums mt-0.5">${stats.pending}</div>
+                      <div class="text-[11px] font-medium text-[#788A96] mt-1">Menunggu laporan sekolah</div>
+                    </div>
+                  </div>
+
+                  <!-- KPI 4: Memiliki Sertifikat (Ya) -->
+                  <div class="rounded-2xl p-5 bg-[#A8B0D0]/85 border-t border-l border-white/80 shadow-md flex flex-col justify-between">
+                    <div class="w-10 h-10 rounded-xl bg-white/70 text-[#1A2B38] flex items-center justify-center shadow-sm mb-3">
+                      <i data-lucide="award" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                      <div class="text-xs font-semibold text-[#1A2B38]/80">Bersertifikat (Ya)</div>
+                      <div class="text-2xl sm:text-3xl font-extrabold text-[#1A2B38] tabular-nums mt-0.5">${stats.certYes}</div>
+                      <div class="text-[11px] font-medium text-[#1A2B38]/75 mt-1">${stats.certNo} sekolah menjawab Belum</div>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- MAIN CHARTS ROW: PROPORSIONAL 70% : 30% (lg:col-span-8 & lg:col-span-4) -->
+                <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                  
+                  <!-- KIRI (70% -> 8 dari 12 kolom): STACKED BAR CHART 16 KECAMATAN -->
+                  <div class="lg:col-span-8 tactile-card rounded-3xl p-5 sm:p-6 flex flex-col justify-between">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                      <div>
+                        <h3 class="text-base font-bold text-[#1A2B38]">Progres Pengisian per Kecamatan (16 Kecamatan)</h3>
+                        <p class="text-xs text-[#475A68]">Batang bertumpuk: Biru (Sudah Mengisi) & Silver (Belum Mengisi)</p>
+                      </div>
+                      <span class="px-3 py-1 rounded-full text-xs font-semibold bg-white/70 text-[#386B82] border border-white">
+                        16 Wilayah
+                      </span>
+                    </div>
+
+                    <div class="relative w-full h-72 sm:h-80">
+                      <canvas id="stackedBarChart"></canvas>
+                    </div>
+                  </div>
+
+                  <!-- KANAN (30% -> 4 dari 12 kolom): DOUGHNUT CHART YA VS BELUM -->
+                  <div class="lg:col-span-4 tactile-card rounded-3xl p-5 sm:p-6 flex flex-col justify-between">
+                    <div>
+                      <h3 class="text-base font-bold text-[#1A2B38]">Status Kepemilikan Sertifikat</h3>
+                      <p class="text-xs text-[#475A68]">Perbandingan jawaban Ya vs Belum</p>
+                    </div>
+
+                    <div class="relative w-44 h-44 mx-auto my-4">
+                      <canvas id="donutChart"></canvas>
+                      <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <span class="text-2xl font-extrabold text-[#1A2B38] tabular-nums">${stats.certYes + stats.certNo}</span>
+                        <span class="text-[10px] font-semibold uppercase tracking-wider text-[#788A96]">Total Masuk</span>
+                      </div>
+                    </div>
+
+                    <!-- Legenda Vertikal -->
+                    <div class="space-y-2.5 pt-2 border-t border-slate-300/40">
+                      <div class="flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-2">
+                          <span class="w-3 h-3 rounded-full bg-[#386B82]"></span>
+                          <span class="font-semibold text-[#1A2B38]">Ya (Bersertifikat)</span>
+                        </div>
+                        <div class="font-bold text-[#1A2B38] tabular-nums">${stats.certYes} (${pctYes}%)</div>
+                      </div>
+                      <div class="flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-2">
+                          <span class="w-3 h-3 rounded-full bg-[#8A8FB5]"></span>
+                          <span class="font-semibold text-[#1A2B38]">Belum Memiliki</span>
+                        </div>
+                        <div class="font-bold text-[#1A2B38] tabular-nums">${stats.certNo} (${pctNo}%)</div>
+                      </div>
+                    </div>
+                  </div>
+
+                </section>
+
+                <!-- RINGKASAN TABEL TERBARU DI DASHBOARD -->
+                <section class="tactile-card rounded-3xl p-5 sm:p-6">
+                  <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div>
+                      <h3 class="text-base font-bold text-[#1A2B38]">Daftar Ringkas Status Sekolah</h3>
+                      <p class="text-xs text-[#475A68]">Klik "Kelola Semua Data" untuk mengunggah database Excel atau mereset status sekolah.</p>
+                    </div>
+                    <button data-admin-tab="schools" class="px-4 py-2 rounded-full bg-white/75 hover:bg-white text-[#386B82] text-xs font-bold border border-white transition">
+                      Kelola Semua Data →
+                    </button>
+                  </div>
+                  ${renderSchoolsTable(filteredSchools.slice(0, 8), true)}
+                </section>
+
+              ` : `
+                <!-- TAB 2: DATA SEKOLAH, UPLOAD EXCEL/CSV, TAMBAH MANUAL & MONITORING RESET -->
+                <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                  
+                  <!-- UPLOAD MASSAL EXCEL / CSV -->
+                  <div class="lg:col-span-6 tactile-card rounded-3xl p-6 space-y-4">
+                    <div class="flex items-start justify-between gap-3">
+                      <div>
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-[#386B82]">Impor Massal</span>
+                        <h3 class="text-base font-bold text-[#1A2B38] mt-0.5">Upload Database Referensi Sekolah</h3>
+                        <p class="text-xs text-[#475A68] mt-1">Unggah file Excel (.xlsx/.xls) atau CSV berisi kolom: <strong>Nomor/NPSN, Nama Sekolah, Alamat, Kecamatan</strong>.</p>
+                      </div>
+                      <button id="btn-download-template" class="shrink-0 px-3 py-1.5 rounded-full bg-white/80 hover:bg-white text-[#386B82] text-xs font-semibold border border-white inline-flex items-center gap-1.5">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        Template
+                      </button>
+                    </div>
+
+                    <label for="input-excel-upload"
+                      class="flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-dashed border-[#386B82]/40 bg-white/45 hover:bg-white/75 cursor-pointer transition text-center">
+                      <div class="w-11 h-11 rounded-2xl bg-[#386B82] text-white flex items-center justify-center mb-2 shadow">
+                        <i data-lucide="file-up" class="w-5 h-5"></i>
+                      </div>
+                      <span class="text-sm font-bold text-[#1A2B38]">Pilih File Excel atau CSV</span>
+                      <span class="text-xs text-[#788A96] mt-0.5">Data otomatis memperbarui referensi login NPSN sekolah</span>
+                      <input type="file" id="input-excel-upload" accept=".xlsx,.xls,.csv" class="hidden" />
+                    </label>
+                  </div>
+
+                  <!-- TAMBAH SEKOLAH MANUAL -->
+                  <div class="lg:col-span-6 tactile-card rounded-3xl p-6">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-[#386B82]">Input Satuan</span>
+                    <h3 class="text-base font-bold text-[#1A2B38] mt-0.5 mb-3">Tambah Sekolah Manual</h3>
+
+                    <form id="form-add-school" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <input type="text" id="add-npsn" placeholder="NPSN (Contoh: 20210099)" required
+                          class="w-full px-3.5 py-2.5 rounded-xl tactile-inset text-xs font-semibold text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
+                      </div>
+                      <div>
+                        <input type="text" id="add-nama" placeholder="Nama Sekolah" required
+                          class="w-full px-3.5 py-2.5 rounded-xl tactile-inset text-xs font-semibold text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
+                      </div>
+                      <div>
+                        <input type="text" id="add-alamat" placeholder="Alamat Sekolah"
+                          class="w-full px-3.5 py-2.5 rounded-xl tactile-inset text-xs font-medium text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
+                      </div>
+                      <div>
+                        <input type="text" id="add-kecamatan" list="list-16-kecamatan" placeholder="Pilih / Ketik Kecamatan" required
+                          class="w-full px-3.5 py-2.5 rounded-xl tactile-inset text-xs font-semibold text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
+                        <datalist id="list-16-kecamatan">
+                          ${allKecamatanOptions.map(k => `<option value="${escapeHtml(k)}"></option>`).join('')}
+                        </datalist>
+                      </div>
+                      <div class="sm:col-span-2 flex justify-end pt-1">
+                        <button type="submit" class="px-5 py-2.5 rounded-full bg-[#386B82] hover:bg-[#2C4356] text-white text-xs font-semibold tactile-btn inline-flex items-center gap-1.5">
+                          <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                          <span>Simpan Referensi Sekolah</span>
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </section>
+
+                <!-- FILTER & TABEL MONITORING LENGKAP -->
+                <section class="tactile-card rounded-3xl p-5 sm:p-6 space-y-4">
+                  <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div>
+                      <h3 class="text-base font-bold text-[#1A2B38]">Monitoring & Kontrol Reset Sekolah (${filteredSchools.length})</h3>
+                      <p class="text-xs text-[#475A68]">Gunakan tombol <strong>Reset</strong> untuk membuka kembali kunci pengisian sekolah tertentu.</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                      <select id="filter-kecamatan" class="px-3.5 py-2 rounded-full tactile-inset text-xs font-semibold text-[#1A2B38] focus:outline-none">
+                        <option value="ALL" ${state.filterKecamatan === 'ALL' ? 'selected' : ''}>Semua Kecamatan</option>
+                        ${allKecamatanOptions.map(k => `<option value="${escapeHtml(k)}" ${state.filterKecamatan === k ? 'selected' : ''}>${escapeHtml(k)}</option>`).join('')}
+                      </select>
+
+                      <select id="filter-status" class="px-3.5 py-2 rounded-full tactile-inset text-xs font-semibold text-[#1A2B38] focus:outline-none">
+                        <option value="ALL" ${state.filterStatus === 'ALL' ? 'selected' : ''}>Semua Status</option>
+                        <option value="SUBMITTED" ${state.filterStatus === 'SUBMITTED' ? 'selected' : ''}>Sudah Mengisi (Terkunci)</option>
+                        <option value="PENDING" ${state.filterStatus === 'PENDING' ? 'selected' : ''}>Belum Mengisi</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  ${renderSchoolsTable(filteredSchools, false)}
+                </section>
+              `}
+
+            </div>
+          </main>
+        </div>
+      `;
+    }
+
+    function renderSchoolsTable(schoolsList, compact = false) {
+      if (!schoolsList.length) {
+        return `
+          <div class="py-12 px-4 text-center rounded-2xl bg-white/40 border border-white/70">
+            <div class="w-12 h-12 rounded-2xl bg-[#386B82]/15 text-[#386B82] flex items-center justify-center mx-auto mb-3">
+              <i data-lucide="folder-open" class="w-6 h-6"></i>
+            </div>
+            <h4 class="text-sm font-bold text-[#1A2B38]">Belum Ada Data Sekolah</h4>
+            <p class="text-xs text-[#475A68] max-w-md mx-auto mt-1">
+              Silakan tambahkan data referensi sekolah secara manual atau unggah file Excel/CSV pada menu <strong>Data & Monitoring</strong>.
+            </p>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="overflow-x-auto custom-scroll rounded-2xl border border-white/80 bg-white/45">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-[#2C4356] text-slate-100 text-[11px] uppercase tracking-wider">
+                <th class="py-3 px-4 font-semibold">NPSN</th>
+                <th class="py-3 px-4 font-semibold">Nama Sekolah & Alamat</th>
+                <th class="py-3 px-4 font-semibold">Kecamatan</th>
+                <th class="py-3 px-4 font-semibold">Status</th>
+                <th class="py-3 px-4 font-semibold">Sertifikat</th>
+                <th class="py-3 px-4 font-semibold">Dokumen</th>
+                ${!compact ? '<th class="py-3 px-4 font-semibold text-right">Aksi Admin</th>' : ''}
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-300/40 text-xs">
+              ${schoolsList.map(s => `
+                <tr class="hover:bg-white/60 transition">
+                  <td class="py-3 px-4 font-bold text-[#1A2B38] tabular-nums whitespace-nowrap">${escapeHtml(s.npsn)}</td>
+                  <td class="py-3 px-4">
+                    <div class="font-bold text-[#1A2B38]">${escapeHtml(s.nama_sekolah)}</div>
+                    <div class="text-[11px] text-[#788A96] line-clamp-1">${escapeHtml(s.alamat || '-')}</div>
+                  </td>
+                  <td class="py-3 px-4 font-medium text-[#475A68] whitespace-nowrap">${escapeHtml(s.kecamatan)}</td>
+                  <td class="py-3 px-4 whitespace-nowrap">
+                    ${s.is_submitted ? `
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#386B82]/15 text-[#386B82] font-bold">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#386B82]"></span>
+                        Sudah Mengisi
+                      </span>
+                    ` : `
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-300/60 text-[#475A68] font-semibold">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#788A96]"></span>
+                        Belum Mengisi
+                      </span>
+                    `}
+                  </td>
+                  <td class="py-3 px-4 whitespace-nowrap">
+                    ${s.is_submitted ? (
+                      s.has_certificate === 'Ya'
+                        ? `<span class="font-bold text-emerald-700">Ya</span> <span class="text-[11px] text-[#475A68] block">No: ${escapeHtml(s.certificate_number || '-')}</span>`
+                        : `<span class="font-semibold text-[#788A96]">Belum</span>`
+                    ) : '<span class="text-[#788A96]">-</span>'}
+                  </td>
+                  <td class="py-3 px-4 whitespace-nowrap">
+                    ${s.document_url ? `
+                      <a href="${escapeHtml(s.document_url)}" target="_blank" rel="noopener noreferrer"
+                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#386B82] text-white font-semibold hover:bg-[#2C4356] transition">
+                        <i data-lucide="file-check" class="w-3 h-3"></i>
+                        Lihat
+                      </a>
+                    ` : '<span class="text-[#788A96]">-</span>'}
+                  </td>
+                  ${!compact ? `
+                    <td class="py-3 px-4 text-right whitespace-nowrap space-x-1">
+                      ${s.is_submitted ? `
+                        <button data-reset-npsn="${escapeHtml(s.npsn)}" data-reset-name="${escapeHtml(s.nama_sekolah)}"
+                          class="px-3 py-1.5 rounded-full bg-amber-500/20 hover:bg-amber-500/35 text-amber-900 font-bold inline-flex items-center gap-1 transition" title="Buka kunci agar sekolah dapat mengirim ulang">
+                          <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
+                          Reset
+                        </button>
+                      ` : ''}
+                      <button data-delete-npsn="${escapeHtml(s.npsn)}" data-delete-name="${escapeHtml(s.nama_sekolah)}"
+                        class="p-1.5 rounded-full hover:bg-rose-100 text-rose-600 inline-flex items-center transition" title="Hapus Sekolah">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                      </button>
+                    </td>
+                  ` : ''}
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // MAIN RENDER & EVENT BINDINGS
+    // =========================================================================
+    function render() {
+      const root = document.getElementById('root');
+      if (!state.role) {
+        root.innerHTML = renderLoginView();
+      } else if (state.role === 'school') {
+        root.innerHTML = renderSchoolPortalView();
+      } else if (state.role === 'admin') {
+        root.innerHTML = renderAdminDashboardView();
+      }
+
+      lucide.createIcons();
+      bindEvents();
+
+      if (state.role === 'admin' && state.activeAdminTab === 'dashboard') {
+        requestAnimationFrame(() => renderCharts());
+      }
+    }
+
+    function bindEvents() {
+      // 1. Preview Quick Login Buttons (Hanya ada saat IS_PREVIEW = true)
+      document.querySelectorAll('[data-quick-login]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const mode = btn.getAttribute('data-quick-login');
+          if (mode === 'admin') {
+            handleAdminLogin('admin@preview.local', 'preview123');
+          } else if (mode === 'school-pending') {
+            handleSchoolLogin('20210002');
+          } else if (mode === 'school-done') {
+            handleSchoolLogin('20210001');
+          }
+        });
+      });
+
+      // 2. Login Tabs & Forms
+      document.getElementById('tab-login-school')?.addEventListener('click', () => {
+        state.loginTab = 'school';
+        render();
+      });
+      document.getElementById('tab-login-admin')?.addEventListener('click', () => {
+        state.loginTab = 'admin';
+        render();
+      });
+
+      document.getElementById('form-school-login')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const npsn = document.getElementById('input-npsn').value;
+        handleSchoolLogin(npsn);
+      });
+
+      document.getElementById('form-admin-login')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('input-admin-email').value;
+        const pass = document.getElementById('input-admin-password').value;
+        handleAdminLogin(email, pass);
+      });
+
+      // 3. Logout Buttons
+      ['btn-logout', 'btn-logout-desktop', 'btn-logout-mobile'].forEach(id => {
+        document.getElementById(id)?.addEventListener('click', handleLogout);
+      });
+
+      // 4. Portal Sekolah Interactions
+      document.querySelectorAll('[data-choose-answer]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.schoolAnswer = btn.getAttribute('data-choose-answer');
+          render();
+        });
+      });
+
+      document.getElementById('input-cert-number')?.addEventListener('input', (e) => {
+        state.schoolCertNumber = e.target.value;
+      });
+
+      document.getElementById('input-cert-file')?.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          if (file.size > 5 * 1024 * 1024) {
+            showToast('Ukuran file maksimal 5MB.', 'error');
+            e.target.value = '';
+            return;
+          }
+          state.schoolFile = file;
+          render();
+        }
+      });
+
+      document.getElementById('btn-submit-school')?.addEventListener('click', () => {
+        showModal({
+          title: 'Konfirmasi Pengiriman Data',
+          bodyHtml: `Apakah Anda yakin ingin mengirim data sertifikat untuk <strong>${escapeHtml(state.currentSchool?.nama_sekolah)}</strong>? Setelah dikirim, formulir akan <strong>terkunci otomatis</strong>.`,
+          confirmText: 'Ya, Kirim & Kunci',
+          onConfirm: handleSchoolSubmit
+        });
+      });
+
+      // 5. Admin Navigation & Actions
+      document.querySelectorAll('[data-admin-tab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.activeAdminTab = btn.getAttribute('data-admin-tab');
+          render();
+        });
+      });
+
+      document.getElementById('admin-global-search')?.addEventListener('input', (e) => {
+        state.searchQuery = e.target.value;
+        // Pertahankan fokus input saat mengetik
+        const cursorPos = e.target.selectionStart;
+        render();
+        const newInput = document.getElementById('admin-global-search');
+        if (newInput) {
+          newInput.focus();
+          newInput.setSelectionRange(cursorPos, cursorPos);
+        }
+      });
+
+      document.getElementById('filter-kecamatan')?.addEventListener('change', (e) => {
+        state.filterKecamatan = e.target.value;
+        render();
+      });
+
+      document.getElementById('filter-status')?.addEventListener('change', (e) => {
+        state.filterStatus = e.target.value;
+        render();
+      });
+
+      document.getElementById('btn-export-excel')?.addEventListener('click', exportToExcel);
+      document.getElementById('btn-export-pdf')?.addEventListener('click', exportToPDF);
+      document.getElementById('btn-download-template')?.addEventListener('click', downloadExcelTemplate);
+
+      document.getElementById('input-excel-upload')?.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          handleBulkUploadExcel(file);
+          e.target.value = '';
+        }
+      });
+
+      document.getElementById('form-add-school')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const ok = await handleAddSingleSchool({
+          npsn: document.getElementById('add-npsn').value,
+          nama_sekolah: document.getElementById('add-nama').value,
+          alamat: document.getElementById('add-alamat').value,
+          kecamatan: document.getElementById('add-kecamatan').value
+        });
+        if (ok) {
+          e.target.reset();
+        }
+      });
+
+      // Reset Status Sekolah oleh Admin
+      document.querySelectorAll('[data-reset-npsn]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const npsn = btn.getAttribute('data-reset-npsn');
+          const name = btn.getAttribute('data-reset-name');
+          showModal({
+            title: 'Reset Status Pengisian Sekolah',
+            bodyHtml: `Anda akan membuka kunci pengisian untuk <strong>${escapeHtml(name)} (NPSN: ${escapeHtml(npsn)})</strong>. Data sertifikat sebelumnya akan dihapus agar sekolah dapat mengirim ulang.`,
+            confirmText: 'Ya, Reset Sekarang',
+            onConfirm: () => handleResetSchool(npsn)
+          });
+        });
+      });
+
+      // Hapus Sekolah oleh Admin
+      document.querySelectorAll('[data-delete-npsn]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const npsn = btn.getAttribute('data-delete-npsn');
+          const name = btn.getAttribute('data-delete-name');
+          showModal({
+            title: 'Hapus Referensi Sekolah',
+            bodyHtml: `Yakin ingin menghapus <strong>${escapeHtml(name)} (NPSN: ${escapeHtml(npsn)})</strong> dari database referensi?`,
+            confirmText: 'Hapus Permanen',
+            danger: true,
+            onConfirm: () => handleDeleteSchool(npsn)
+          });
+        });
+      });
+    }
+
+    // Jalankan inisialisasi aplikasi
+    initApp();
+  </script>
+</body>
+</html>
