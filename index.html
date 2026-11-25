@@ -8,6 +8,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Dashboard Sertifikat Sekolah</title>
 
+  <!-- Dynamic Favicon -->
+  <link id="dynamic-favicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%232C4356'/%3E%3Cpath d='M50 22L20 38l30 16 30-16-30-16zm-18 24v16c0 8 8 14 18 14s18-6 18-14V46L50 56 32 46z' fill='%238ABBC4'/%3E%3C/svg%3E" />
+
   <!-- PWA Manifest via Data URI -->
   <link rel="manifest" href="data:application/manifest+json,{
     %22name%22:%22Dashboard%20Sertifikat%20Sekolah%22,
@@ -174,33 +177,25 @@
     }
 
     // =========================================================================
-    // DATA REFERENSI KECAMATAN & DATA PREVIEW MINIMALIS (HANYA AKTIF SAAT PREVIEW)
+    // DATA PREVIEW MINIMALIS (TANPA DAFTAR KECAMATAN BAWAAN)
     // =========================================================================
-    const DEFAULT_16_KECAMATAN = [
-      "Kec. Sukamaju", "Kec. Harapan Jaya", "Kec. Mekarsari", "Kec. Cempaka Putih",
-      "Kec. Bina Karya", "Kec. Tirtajaya", "Kec. Karanganyar", "Kec. Sumberwaras",
-      "Kec. Kertamulya", "Kec. Margahayu", "Kec. Bojonggede", "Kec. Cikarang Barat",
-      "Kec. Tambun Selatan", "Kec. Setu", "Kec. Cibitung", "Kec. Babelan"
-    ];
-
-    // Hanya 2 contoh sekolah minimalis saat IS_PREVIEW = true (1 sudah mengisi, 1 belum mengisi)
     const PREVIEW_INITIAL_SCHOOLS = [
       {
         npsn: "20210001",
-        nama_sekolah: "SDN Sukamaju 01",
-        alamat: "Jl. Pendidikan No. 12, Sukamaju",
-        kecamatan: "Kec. Sukamaju",
+        nama_sekolah: "SDN Contoh 01",
+        alamat: "Jl. Pendidikan No. 12",
+        kecamatan: "Wilayah A",
         is_submitted: true,
         has_certificate: "Ya",
         certificate_number: "CERT-2026-0891",
-        document_url: "https://placehold.co/800x600/2C4356/E8EEF2?text=Pratinjau+Sertifikat+SDN+Sukamaju+01",
+        document_url: "https://placehold.co/800x600/2C4356/E8EEF2?text=Pratinjau+Sertifikat",
         submitted_at: new Date().toISOString()
       },
       {
         npsn: "20210002",
-        nama_sekolah: "SMPN Harapan Jaya 02",
-        alamat: "Jl. Merdeka Raya No. 45, Harapan Jaya",
-        kecamatan: "Kec. Harapan Jaya",
+        nama_sekolah: "SMPN Contoh 02",
+        alamat: "Jl. Merdeka Raya No. 45",
+        kecamatan: "Wilayah B",
         is_submitted: false,
         has_certificate: null,
         certificate_number: null,
@@ -208,6 +203,8 @@
         submitted_at: null
       }
     ];
+
+    const DEFAULT_FAVICON_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%232C4356'/%3E%3Cpath d='M50 22L20 38l30 16 30-16-30-16zm-18 24v16c0 8 8 14 18 14s18-6 18-14V46L50 56 32 46z' fill='%238ABBC4'/%3E%3C/svg%3E";
 
     // =========================================================================
     // STATE APLIKASI TERPUSAT
@@ -220,6 +217,9 @@
       activeAdminTab: 'dashboard', // 'dashboard' | 'schools'
       loginTab: 'school', // 'school' | 'admin'
       loading: false,
+      // Pencarian Nama Sekolah & Menu Favicon di Login Admin / Dashboard
+      loginSchoolSearchQuery: '',
+      customFaviconUrl: localStorage.getItem('custom_app_favicon') || '',
       // Filter & Pencarian Admin
       searchQuery: '',
       filterKecamatan: 'ALL',
@@ -232,6 +232,49 @@
       barChartInstance: null,
       donutChartInstance: null
     };
+
+    // =========================================================================
+    // FUNGSI UPDATE LOGO & FAVICON
+    // =========================================================================
+    function applyFavicon(dataUrl) {
+      const link = document.getElementById('dynamic-favicon');
+      if (link) {
+        link.href = dataUrl || DEFAULT_FAVICON_SVG;
+      }
+    }
+
+    function handleFaviconUpload(file) {
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('Ukuran gambar logo/favicon maksimal 2MB.', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target.result;
+        state.customFaviconUrl = result;
+        localStorage.setItem('custom_app_favicon', result);
+        applyFavicon(result);
+        showToast('Logo & Favicon berhasil diperbarui!', 'success');
+        render();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function handleResetFavicon() {
+      state.customFaviconUrl = '';
+      localStorage.removeItem('custom_app_favicon');
+      applyFavicon(DEFAULT_FAVICON_SVG);
+      showToast('Logo & Favicon dikembalikan ke bawaan.', 'info');
+      render();
+    }
+
+    function renderBrandLogo(sizeClass = 'w-6 h-6', imgClass = 'w-full h-full object-contain rounded-xl') {
+      if (state.customFaviconUrl) {
+        return `<img src="${escapeHtml(state.customFaviconUrl)}" alt="Logo" class="${imgClass}" />`;
+      }
+      return `<i data-lucide="award" class="${sizeClass}"></i>`;
+    }
 
     // =========================================================================
     // UTILITAS UI (TOAST, MODAL, FORMATTER)
@@ -327,13 +370,19 @@
     // LAYER DATA & SUPABASE INTEGRATION
     // =========================================================================
     async function initApp() {
+      if (state.customFaviconUrl) {
+        applyFavicon(state.customFaviconUrl);
+      }
+
       if (!IS_PREVIEW && supabase) {
         try {
+          // Muat daftar referensi sekolah agar pencarian nama sekolah di halaman Login Admin berfungsi
+          await fetchSchoolsFromSupabase(true);
+
           const { data: { session } } = await supabase.auth.getSession();
           if (session && session.user) {
             state.role = 'admin';
             state.adminUser = session.user;
-            await fetchSchoolsFromSupabase();
           }
         } catch (err) {
           console.error('Session check error:', err);
@@ -342,10 +391,12 @@
       render();
     }
 
-    async function fetchSchoolsFromSupabase() {
+    async function fetchSchoolsFromSupabase(silent = false) {
       if (IS_PREVIEW) return state.schools;
-      state.loading = true;
-      render();
+      if (!silent) {
+        state.loading = true;
+        render();
+      }
       try {
         const { data, error } = await supabase
           .from('schools')
@@ -356,10 +407,14 @@
         if (error) throw error;
         state.schools = data || [];
       } catch (err) {
-        showToast('Gagal memuat data sekolah dari Supabase: ' + err.message, 'error');
+        if (!silent) {
+          showToast('Gagal memuat data sekolah dari Supabase: ' + err.message, 'error');
+        }
       } finally {
-        state.loading = false;
-        render();
+        if (!silent) {
+          state.loading = false;
+          render();
+        }
       }
     }
 
@@ -388,7 +443,6 @@
             showToast(`Selamat datang, ${found.nama_sekolah}`, 'success');
           }
         } else {
-          // Wajib SELECT langsung ke tabel 'schools' berdasarkan NPSN
           const { data, error } = await supabase
             .from('schools')
             .select('*')
@@ -679,7 +733,6 @@
           return;
         }
 
-        // Normalisasi nama kolom (mendukung variasi: Nomor/NPSN, Nama Sekolah, Alamat, Kecamatan)
         const parsedRecords = [];
         for (const row of rows) {
           const keys = Object.keys(row);
@@ -732,7 +785,6 @@
           });
           state.schools = Array.from(map.values());
         } else {
-          // Upsert referensi sekolah tanpa menimpa status pengisian yang sudah ada
           const upsertPayload = parsedRecords.map(r => ({
             npsn: r.npsn,
             nama_sekolah: r.nama_sekolah,
@@ -758,8 +810,8 @@
     // Download Template Excel Referensi Sekolah
     function downloadExcelTemplate() {
       const templateData = [
-        { "Nomor": "20210011", "Nama Sekolah": "SDN Contoh 01", "Alamat": "Jl. Pendidikan No. 1", "Kecamatan": "Kec. Sukamaju" },
-        { "Nomor": "20210012", "Nama Sekolah": "SMPN Contoh 02", "Alamat": "Jl. Merdeka No. 10", "Kecamatan": "Kec. Harapan Jaya" }
+        { "Nomor": "20210011", "Nama Sekolah": "SDN Contoh 01", "Alamat": "Jl. Pendidikan No. 1", "Kecamatan": "Kecamatan A" },
+        { "Nomor": "20210012", "Nama Sekolah": "SMPN Contoh 02", "Alamat": "Jl. Merdeka No. 10", "Kecamatan": "Kecamatan B" }
       ];
       const ws = XLSX.utils.json_to_sheet(templateData);
       const wb = XLSX.utils.book_new();
@@ -776,7 +828,7 @@
         const matchSearch = !state.searchQuery ||
           s.npsn.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
           s.nama_sekolah.toLowerCase().includes(state.searchQuery.toLowerCase()) ||
-          s.kecamatan.toLowerCase().includes(state.searchQuery.toLowerCase());
+          (s.kecamatan && s.kecamatan.toLowerCase().includes(state.searchQuery.toLowerCase()));
 
         const matchKec = state.filterKecamatan === 'ALL' || s.kecamatan === state.filterKecamatan;
 
@@ -864,7 +916,7 @@
     }
 
     // =========================================================================
-    // KALKULASI STATISTIK & GRAFIK (70% STACKED BAR 16 KECAMATAN + 30% DOUGHNUT)
+    // KALKULASI STATISTIK & GRAFIK (MURNI DARI DATA KECAMATAN YANG ADA)
     // =========================================================================
     function computeStatistics() {
       const total = state.schools.length;
@@ -873,22 +925,14 @@
       const certYes = state.schools.filter(s => s.is_submitted && s.has_certificate === 'Ya').length;
       const certNo = state.schools.filter(s => s.is_submitted && s.has_certificate === 'Belum').length;
 
-      // Kumpulkan daftar 16 kecamatan (prioritaskan kecamatan dari data aktual, lengkapi hingga 16 dari DEFAULT_16_KECAMATAN)
+      // Hanya mengambil nama kecamatan yang benar-benar ada di data sekolah (tanpa kecamatan bawaan)
       const uniqueFromData = Array.from(new Set(state.schools.map(s => s.kecamatan).filter(Boolean)));
-      const kecamatanList = [...uniqueFromData];
-      for (const defKec of DEFAULT_16_KECAMATAN) {
-        if (kecamatanList.length >= 16) break;
-        if (!kecamatanList.includes(defKec)) {
-          kecamatanList.push(defKec);
-        }
-      }
-      const final16 = kecamatanList.slice(0, 16);
 
-      const barLabels = final16.map(k => k.replace(/^Kec\.\s*/i, ''));
-      const barSubmittedData = final16.map(kec =>
+      const barLabels = uniqueFromData.map(k => k.replace(/^Kec\.\s*/i, ''));
+      const barSubmittedData = uniqueFromData.map(kec =>
         state.schools.filter(s => s.kecamatan === kec && s.is_submitted).length
       );
-      const barPendingData = final16.map(kec =>
+      const barPendingData = uniqueFromData.map(kec =>
         state.schools.filter(s => s.kecamatan === kec && !s.is_submitted).length
       );
 
@@ -898,6 +942,7 @@
         pending,
         certYes,
         certNo,
+        kecamatanCount: uniqueFromData.length,
         barLabels,
         barSubmittedData,
         barPendingData
@@ -914,16 +959,16 @@
       if (state.barChartInstance) state.barChartInstance.destroy();
       if (state.donutChartInstance) state.donutChartInstance.destroy();
 
-      // 1. Stacked Bar Chart (16 Kecamatan: Biru = Sudah Mengisi, Silver = Belum Mengisi)
+      // 1. Stacked Bar Chart (Kecamatan dari database)
       state.barChartInstance = new Chart(barCanvas, {
         type: 'bar',
         data: {
-          labels: stats.barLabels,
+          labels: stats.barLabels.length ? stats.barLabels : ['Belum Ada Data Kecamatan'],
           datasets: [
             {
               label: 'Sudah Mengisi',
-              data: stats.barSubmittedData,
-              backgroundColor: '#386B82', // Biru Teal
+              data: stats.barSubmittedData.length ? stats.barSubmittedData : [0],
+              backgroundColor: '#386B82',
               borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 6, bottomRight: 6 },
               borderSkipped: false,
               barPercentage: 0.65,
@@ -931,8 +976,8 @@
             },
             {
               label: 'Belum Mengisi',
-              data: stats.barPendingData,
-              backgroundColor: '#B8C4CC', // Silver
+              data: stats.barPendingData.length ? stats.barPendingData : [0],
+              backgroundColor: '#B8C4CC',
               borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 },
               borderSkipped: false,
               barPercentage: 0.65,
@@ -972,7 +1017,7 @@
                 color: '#475A68',
                 font: { family: 'Plus Jakarta Sans', size: 10, weight: '500' },
                 maxRotation: 45,
-                minRotation: 35
+                minRotation: 0
               }
             },
             y: {
@@ -1052,6 +1097,16 @@
     }
 
     function renderLoginView() {
+      // Filter pencarian nama sekolah pada tab Login Admin
+      const searchQ = state.loginSchoolSearchQuery.trim().toLowerCase();
+      const matchedSchools = searchQ
+        ? state.schools.filter(s =>
+            s.nama_sekolah.toLowerCase().includes(searchQ) ||
+            s.npsn.toLowerCase().includes(searchQ) ||
+            (s.kecamatan && s.kecamatan.toLowerCase().includes(searchQ))
+          ).slice(0, 6)
+        : [];
+
       return `
         ${renderPreviewBanner()}
         <div class="min-h-[calc(100vh-40px)] flex items-center justify-center p-4 sm:p-6">
@@ -1060,8 +1115,8 @@
             <!-- Left Visual Panel (Dark Slate Tactile) -->
             <div class="lg:col-span-5 sidebar-gradient p-7 sm:p-9 text-slate-100 flex flex-col justify-between relative overflow-hidden">
               <div class="relative z-10">
-                <div class="w-12 h-12 rounded-2xl bg-[#8ABBC4]/20 border border-[#8ABBC4]/40 flex items-center justify-center mb-6 shadow-inner">
-                  <i data-lucide="award" class="w-6 h-6 text-[#8ABBC4]"></i>
+                <div class="w-12 h-12 rounded-2xl bg-[#8ABBC4]/20 border border-[#8ABBC4]/40 flex items-center justify-center mb-6 shadow-inner overflow-hidden p-1.5">
+                  ${renderBrandLogo('w-6 h-6 text-[#8ABBC4]')}
                 </div>
                 <span class="inline-block px-3 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase bg-white/10 text-[#8ABBC4] mb-3">
                   Sistem Pendataan Terpadu
@@ -1096,7 +1151,7 @@
             <!-- Right Form Panel (Matte Glassmorphism) -->
             <div class="lg:col-span-7 tactile-card p-7 sm:p-10 flex flex-col justify-center">
               <!-- Switcher Tabs -->
-              <div class="tactile-inset p-1.5 rounded-full grid grid-cols-2 mb-7">
+              <div class="tactile-inset p-1.5 rounded-full grid grid-cols-2 mb-6">
                 <button id="tab-login-school" class="py-2.5 px-4 rounded-full text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 ${state.loginTab === 'school' ? 'bg-[#2C4356] text-white shadow-md' : 'text-[#475A68] hover:text-[#1A2B38]'}">
                   <i data-lucide="building-2" class="w-4 h-4"></i>
                   Portal Sekolah
@@ -1132,40 +1187,107 @@
                   </button>
                 </form>
               ` : `
-                <form id="form-admin-login" class="space-y-4">
-                  <div>
-                    <h2 class="text-xl font-bold text-[#1A2B38]">Masuk Administrator</h2>
-                    <p class="text-xs sm:text-sm text-[#475A68] mt-1">Kelola database referensi sekolah, pantau grafik kecamatan, dan unduh laporan.</p>
+                <div class="space-y-5">
+                  <form id="form-admin-login" class="space-y-3.5">
+                    <div>
+                      <h2 class="text-xl font-bold text-[#1A2B38]">Masuk Administrator</h2>
+                      <p class="text-xs sm:text-sm text-[#475A68] mt-0.5">Kelola database referensi sekolah, pantau grafik kecamatan, dan unduh laporan.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-[#475A68] mb-1">Email Admin</label>
+                        <div class="relative">
+                          <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-[#788A96]">
+                            <i data-lucide="mail" class="w-4 h-4"></i>
+                          </span>
+                          <input type="email" id="input-admin-email" placeholder="admin@sekolah.go.id" required
+                            class="w-full pl-10 pr-3.5 py-2.5 rounded-2xl tactile-inset text-xs sm:text-sm font-medium text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label class="block text-[11px] font-semibold uppercase tracking-wider text-[#475A68] mb-1">Kata Sandi</label>
+                        <div class="relative">
+                          <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-[#788A96]">
+                            <i data-lucide="key-round" class="w-4 h-4"></i>
+                          </span>
+                          <input type="password" id="input-admin-password" placeholder="••••••••" required
+                            class="w-full pl-10 pr-3.5 py-2.5 rounded-2xl tactile-inset text-xs sm:text-sm font-medium text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <button type="submit" ${state.loading ? 'disabled' : ''}
+                      class="w-full py-3 px-6 rounded-full bg-[#2C4356] hover:bg-[#1E303E] text-white font-semibold text-xs sm:text-sm tactile-btn flex items-center justify-center gap-2">
+                      <span>${state.loading ? 'Mengautentikasi...' : 'Masuk Dashboard Admin'}</span>
+                      <i data-lucide="log-in" class="w-4 h-4"></i>
+                    </button>
+                  </form>
+
+                  <!-- FITUR BARU 1: KOLOM PENCARIAN NAMA SEKOLAH DI LOGIN ADMIN -->
+                  <div class="pt-4 border-t border-slate-300/60 space-y-2.5">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-[#386B82]">
+                      Cari Nama Sekolah / Cek NPSN Terdaftar
+                    </label>
+                    <div class="relative">
+                      <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-[#788A96]">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                      </span>
+                      <input type="text" id="login-admin-school-search" value="${escapeHtml(state.loginSchoolSearchQuery)}"
+                        placeholder="Ketik nama sekolah atau NPSN untuk mencari..."
+                        class="w-full pl-10 pr-4 py-2.5 rounded-2xl tactile-inset text-xs font-semibold text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
+                    </div>
+
+                    ${searchQ ? `
+                      <div class="max-h-36 overflow-y-auto custom-scroll rounded-2xl bg-white/70 border border-white p-2 space-y-1.5">
+                        ${matchedSchools.length ? matchedSchools.map(item => `
+                          <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-white/80 hover:bg-white text-xs transition">
+                            <div>
+                              <div class="font-bold text-[#1A2B38]">${escapeHtml(item.nama_sekolah)}</div>
+                              <div class="text-[11px] text-[#475A68]">NPSN: <strong>${escapeHtml(item.npsn)}</strong> • ${escapeHtml(item.kecamatan || '-')}</div>
+                            </div>
+                            <button type="button" data-use-npsn="${escapeHtml(item.npsn)}"
+                              class="px-2.5 py-1 rounded-full bg-[#386B82]/15 hover:bg-[#386B82] text-[#386B82] hover:text-white font-semibold text-[11px] transition shrink-0">
+                              Buka Portal
+                            </button>
+                          </div>
+                        `).join('') : `
+                          <div class="text-center py-3 text-xs text-[#788A96]">
+                            Sekolah "${escapeHtml(state.loginSchoolSearchQuery)}" tidak ditemukan.
+                          </div>
+                        `}
+                      </div>
+                    ` : ''}
                   </div>
 
-                  <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-[#475A68] mb-1.5">Email Admin</label>
-                    <div class="relative">
-                      <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-[#788A96]">
-                        <i data-lucide="mail" class="w-4 h-4"></i>
-                      </span>
-                      <input type="email" id="input-admin-email" placeholder="admin@sekolah.go.id" required
-                        class="w-full pl-11 pr-4 py-3 rounded-2xl tactile-inset text-sm font-medium text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
+                  <!-- FITUR BARU 2: MENU UPLOAD LOGO FAVICON DI LOGIN ADMIN -->
+                  <div class="pt-3 border-t border-slate-300/60">
+                    <div class="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/55 border border-white">
+                      <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-[#2C4356] text-[#8ABBC4] flex items-center justify-center overflow-hidden p-1 shrink-0 shadow-sm">
+                          ${renderBrandLogo('w-5 h-5')}
+                        </div>
+                        <div>
+                          <div class="text-xs font-bold text-[#1A2B38]">Logo & Favicon Aplikasi</div>
+                          <div class="text-[11px] text-[#475A68]">Ubah ikon tab browser & logo aplikasi</div>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-1.5">
+                        <label for="input-favicon-login" class="px-3 py-1.5 rounded-full bg-[#386B82] hover:bg-[#2C4356] text-white text-[11px] font-semibold cursor-pointer tactile-btn inline-flex items-center gap-1">
+                          <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                          <span>Upload Logo</span>
+                          <input type="file" id="input-favicon-login" accept="image/png,image/jpeg,image/svg+xml,image/x-icon" class="hidden" />
+                        </label>
+                        ${state.customFaviconUrl ? `
+                          <button type="button" id="btn-reset-favicon-login" class="p-1.5 rounded-full bg-rose-100 hover:bg-rose-200 text-rose-600 transition" title="Reset Logo Bawaan">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                          </button>
+                        ` : ''}
+                      </div>
                     </div>
                   </div>
-
-                  <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-[#475A68] mb-1.5">Kata Sandi</label>
-                    <div class="relative">
-                      <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-[#788A96]">
-                        <i data-lucide="key-round" class="w-4 h-4"></i>
-                      </span>
-                      <input type="password" id="input-admin-password" placeholder="••••••••" required
-                        class="w-full pl-11 pr-4 py-3 rounded-2xl tactile-inset text-sm font-medium text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
-                    </div>
-                  </div>
-
-                  <button type="submit" ${state.loading ? 'disabled' : ''}
-                    class="w-full py-3.5 px-6 rounded-full bg-[#2C4356] hover:bg-[#1E303E] text-white font-semibold text-sm tactile-btn flex items-center justify-center gap-2 mt-2">
-                    <span>${state.loading ? 'Mengautentikasi...' : 'Masuk Dashboard Admin'}</span>
-                    <i data-lucide="log-in" class="w-4 h-4"></i>
-                  </button>
-                </form>
+                </div>
               `}
             </div>
           </div>
@@ -1187,8 +1309,8 @@
           <!-- Top Bar -->
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-              <div class="w-11 h-11 rounded-2xl bg-[#2C4356] text-[#8ABBC4] flex items-center justify-center shadow-md">
-                <i data-lucide="award" class="w-6 h-6"></i>
+              <div class="w-11 h-11 rounded-2xl bg-[#2C4356] text-[#8ABBC4] flex items-center justify-center shadow-md overflow-hidden p-1.5">
+                ${renderBrandLogo('w-6 h-6')}
               </div>
               <div>
                 <h1 class="text-lg sm:text-xl font-bold text-[#1A2B38] tracking-tight">Portal Sertifikat Sekolah</h1>
@@ -1389,15 +1511,15 @@
     }
 
     // =========================================================================
-    // VIEW DASHBOARD ADMIN (BENTO GRID + 70:30 CHARTS + CRUD & EXCEL/PDF)
+    // VIEW DASHBOARD ADMIN (TANPA KECAMATAN BAWAAN + PENCARIAN SEKOLAH + FAVICON)
     // =========================================================================
     function renderAdminDashboardView() {
       const stats = computeStatistics();
       const filteredSchools = getFilteredSchools();
-      const allKecamatanOptions = Array.from(new Set([
-        ...DEFAULT_16_KECAMATAN,
-        ...state.schools.map(s => s.kecamatan).filter(Boolean)
-      ]));
+      // Hanya ambil opsi kecamatan dari data sekolah aktual
+      const allKecamatanOptions = Array.from(new Set(
+        state.schools.map(s => s.kecamatan).filter(Boolean)
+      ));
 
       const pctYes = (stats.certYes + stats.certNo) > 0
         ? Math.round((stats.certYes / (stats.certYes + stats.certNo)) * 100)
@@ -1416,8 +1538,8 @@
               <!-- Admin Avatar & Greeting -->
               <div class="flex flex-col items-center text-center pt-3 pb-6 border-b border-white/10">
                 <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-[#386B82] to-[#8ABBC4] p-0.5 shadow-lg mb-3">
-                  <div class="w-full h-full rounded-full bg-[#1E303E] flex items-center justify-center text-[#8ABBC4]">
-                    <i data-lucide="user-cog" class="w-7 h-7"></i>
+                  <div class="w-full h-full rounded-full bg-[#1E303E] flex items-center justify-center text-[#8ABBC4] overflow-hidden p-2">
+                    ${renderBrandLogo('w-7 h-7')}
                   </div>
                 </div>
                 <h2 class="text-base font-bold text-white">Halo, Admin!</h2>
@@ -1450,14 +1572,20 @@
               </nav>
             </div>
 
-            <!-- Inset Bottom Card -->
-            <div class="p-4 rounded-2xl bg-[#162430]/70 border border-white/10 text-center space-y-3">
-              <div class="w-9 h-9 rounded-xl bg-[#8ABBC4]/20 text-[#8ABBC4] flex items-center justify-center mx-auto">
-                <i data-lucide="file-spreadsheet" class="w-5 h-5"></i>
-              </div>
-              <div>
-                <div class="text-xs font-bold text-white">Ekspor Rekapitulasi</div>
-                <div class="text-[11px] text-slate-400 mt-0.5">Unduh format Excel & PDF</div>
+            <!-- Inset Bottom Card: Upload Logo Favicon & Logout -->
+            <div class="p-4 rounded-2xl bg-[#162430]/70 border border-white/10 text-center space-y-2.5">
+              <div class="text-xs font-bold text-white">Logo & Favicon</div>
+              <div class="flex items-center justify-center gap-1.5">
+                <label for="input-favicon-admin" class="flex-1 py-2 px-3 rounded-full bg-[#386B82] hover:bg-[#46829d] text-white text-[11px] font-semibold cursor-pointer inline-flex items-center justify-center gap-1.5 transition">
+                  <i data-lucide="image-plus" class="w-3.5 h-3.5"></i>
+                  <span>Upload Logo</span>
+                  <input type="file" id="input-favicon-admin" accept="image/png,image/jpeg,image/svg+xml,image/x-icon" class="hidden" />
+                </label>
+                ${state.customFaviconUrl ? `
+                  <button type="button" id="btn-reset-favicon-admin" class="p-2 rounded-full bg-white/10 hover:bg-white/20 text-slate-200 transition" title="Reset Logo">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                  </button>
+                ` : ''}
               </div>
               <button id="btn-logout-desktop" class="w-full py-2 px-3 rounded-full bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-400/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition">
                 <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
@@ -1494,19 +1622,19 @@
                     ${state.activeAdminTab === 'dashboard' ? 'Dashboard Sertifikat Sekolah' : 'Database & Monitoring Sekolah'}
                   </h1>
                   <p class="text-xs sm:text-sm text-[#475A68]">
-                    Rekapitulasi pendataan sertifikat sekolah di 16 Kecamatan
+                    Rekapitulasi pendataan sertifikat sekolah (${stats.kecamatanCount} Kecamatan terdaftar)
                   </p>
                 </div>
 
-                <!-- Search & Export Quick Actions -->
+                <!-- Search Nama Sekolah & Export Quick Actions -->
                 <div class="flex flex-wrap items-center gap-2.5">
-                  <div class="relative flex-1 sm:w-56">
+                  <div class="relative flex-1 sm:w-64">
                     <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-[#788A96]">
                       <i data-lucide="search" class="w-4 h-4"></i>
                     </span>
                     <input type="text" id="admin-global-search" value="${escapeHtml(state.searchQuery)}"
-                      placeholder="Cari NPSN / Sekolah..."
-                      class="w-full pl-10 pr-4 py-2.5 rounded-full tactile-inset text-xs font-medium text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
+                      placeholder="Cari Nama Sekolah / NPSN..."
+                      class="w-full pl-10 pr-4 py-2.5 rounded-full tactile-inset text-xs font-semibold text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
                   </div>
 
                   <button id="btn-export-excel" class="px-4 py-2.5 rounded-full bg-[#386B82] hover:bg-[#2C4356] text-white text-xs font-semibold tactile-btn inline-flex items-center gap-1.5">
@@ -1534,7 +1662,7 @@
                     <div>
                       <div class="text-xs font-semibold text-[#1A2B38]/80">Total Referensi Sekolah</div>
                       <div class="text-2xl sm:text-3xl font-extrabold text-[#1A2B38] tabular-nums mt-0.5">${stats.total}</div>
-                      <div class="text-[11px] font-medium text-[#1A2B38]/75 mt-1">Tersebar di 16 Kecamatan</div>
+                      <div class="text-[11px] font-medium text-[#1A2B38]/75 mt-1">Tersebar di ${stats.kecamatanCount} Kecamatan</div>
                     </div>
                   </div>
 
@@ -1580,15 +1708,15 @@
                 <!-- MAIN CHARTS ROW: PROPORSIONAL 70% : 30% (lg:col-span-8 & lg:col-span-4) -->
                 <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
                   
-                  <!-- KIRI (70% -> 8 dari 12 kolom): STACKED BAR CHART 16 KECAMATAN -->
+                  <!-- KIRI (70% -> 8 dari 12 kolom): STACKED BAR CHART KECAMATAN -->
                   <div class="lg:col-span-8 tactile-card rounded-3xl p-5 sm:p-6 flex flex-col justify-between">
                     <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                       <div>
-                        <h3 class="text-base font-bold text-[#1A2B38]">Progres Pengisian per Kecamatan (16 Kecamatan)</h3>
+                        <h3 class="text-base font-bold text-[#1A2B38]">Progres Pengisian per Kecamatan</h3>
                         <p class="text-xs text-[#475A68]">Batang bertumpuk: Biru (Sudah Mengisi) & Silver (Belum Mengisi)</p>
                       </div>
                       <span class="px-3 py-1 rounded-full text-xs font-semibold bg-white/70 text-[#386B82] border border-white">
-                        16 Wilayah
+                        ${stats.kecamatanCount} Kecamatan
                       </span>
                     </div>
 
@@ -1648,7 +1776,7 @@
                 </section>
 
               ` : `
-                <!-- TAB 2: DATA SEKOLAH, UPLOAD EXCEL/CSV, TAMBAH MANUAL & MONITORING RESET -->
+                <!-- TAB 2: DATA SEKOLAH, UPLOAD EXCEL/CSV, TAMBAH MANUAL, LOGO FAVICON & MONITORING RESET -->
                 <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
                   
                   <!-- UPLOAD MASSAL EXCEL / CSV -->
@@ -1671,7 +1799,7 @@
                         <i data-lucide="file-up" class="w-5 h-5"></i>
                       </div>
                       <span class="text-sm font-bold text-[#1A2B38]">Pilih File Excel atau CSV</span>
-                      <span class="text-xs text-[#788A96] mt-0.5">Data otomatis memperbarui referensi login NPSN sekolah</span>
+                      <span class="text-xs text-[#788A96] mt-0.5">Data otomatis memperbarui referensi login NPSN & daftar kecamatan</span>
                       <input type="file" id="input-excel-upload" accept=".xlsx,.xls,.csv" class="hidden" />
                     </label>
                   </div>
@@ -1695,9 +1823,9 @@
                           class="w-full px-3.5 py-2.5 rounded-xl tactile-inset text-xs font-medium text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
                       </div>
                       <div>
-                        <input type="text" id="add-kecamatan" list="list-16-kecamatan" placeholder="Pilih / Ketik Kecamatan" required
+                        <input type="text" id="add-kecamatan" list="list-dynamic-kecamatan" placeholder="Ketik Nama Kecamatan" required
                           class="w-full px-3.5 py-2.5 rounded-xl tactile-inset text-xs font-semibold text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
-                        <datalist id="list-16-kecamatan">
+                        <datalist id="list-dynamic-kecamatan">
                           ${allKecamatanOptions.map(k => `<option value="${escapeHtml(k)}"></option>`).join('')}
                         </datalist>
                       </div>
@@ -1711,15 +1839,25 @@
                   </div>
                 </section>
 
-                <!-- FILTER & TABEL MONITORING LENGKAP -->
+                <!-- FILTER, PENCARIAN NAMA SEKOLAH & TABEL MONITORING LENGKAP -->
                 <section class="tactile-card rounded-3xl p-5 sm:p-6 space-y-4">
                   <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div>
                       <h3 class="text-base font-bold text-[#1A2B38]">Monitoring & Kontrol Reset Sekolah (${filteredSchools.length})</h3>
-                      <p class="text-xs text-[#475A68]">Gunakan tombol <strong>Reset</strong> untuk membuka kembali kunci pengisian sekolah tertentu.</p>
+                      <p class="text-xs text-[#475A68]">Cari nama sekolah atau gunakan tombol <strong>Reset</strong> untuk membuka kembali kunci pengisian.</p>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2">
+                      <!-- Kolom Pencarian Nama Sekolah di Tabel Monitoring -->
+                      <div class="relative w-full sm:w-56">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-[#788A96]">
+                          <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                        </span>
+                        <input type="text" id="table-school-search" value="${escapeHtml(state.searchQuery)}"
+                          placeholder="Cari nama sekolah..."
+                          class="w-full pl-9 pr-3.5 py-2 rounded-full tactile-inset text-xs font-semibold text-[#1A2B38] placeholder-[#788A96] focus:outline-none focus:ring-2 focus:ring-[#386B82]" />
+                      </div>
+
                       <select id="filter-kecamatan" class="px-3.5 py-2 rounded-full tactile-inset text-xs font-semibold text-[#1A2B38] focus:outline-none">
                         <option value="ALL" ${state.filterKecamatan === 'ALL' ? 'selected' : ''}>Semua Kecamatan</option>
                         ${allKecamatanOptions.map(k => `<option value="${escapeHtml(k)}" ${state.filterKecamatan === k ? 'selected' : ''}>${escapeHtml(k)}</option>`).join('')}
@@ -1892,6 +2030,41 @@
         handleAdminLogin(email, pass);
       });
 
+      // Pencarian Nama Sekolah di Halaman Login Admin
+      document.getElementById('login-admin-school-search')?.addEventListener('input', (e) => {
+        state.loginSchoolSearchQuery = e.target.value;
+        const cursorPos = e.target.selectionStart;
+        render();
+        const inputEl = document.getElementById('login-admin-school-search');
+        if (inputEl) {
+          inputEl.focus();
+          inputEl.setSelectionRange(cursorPos, cursorPos);
+        }
+      });
+
+      // Pintasan Buka Portal Sekolah dari Hasil Pencarian di Login Admin
+      document.querySelectorAll('[data-use-npsn]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const npsn = btn.getAttribute('data-use-npsn');
+          handleSchoolLogin(npsn);
+        });
+      });
+
+      // Upload & Reset Logo Favicon (dari Login Admin maupun Sidebar Admin)
+      ['input-favicon-login', 'input-favicon-admin'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', (e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            handleFaviconUpload(file);
+            e.target.value = '';
+          }
+        });
+      });
+
+      ['btn-reset-favicon-login', 'btn-reset-favicon-admin'].forEach(id => {
+        document.getElementById(id)?.addEventListener('click', handleResetFavicon);
+      });
+
       // 3. Logout Buttons
       ['btn-logout', 'btn-logout-desktop', 'btn-logout-mobile'].forEach(id => {
         document.getElementById(id)?.addEventListener('click', handleLogout);
@@ -1939,16 +2112,18 @@
         });
       });
 
-      document.getElementById('admin-global-search')?.addEventListener('input', (e) => {
-        state.searchQuery = e.target.value;
-        // Pertahankan fokus input saat mengetik
-        const cursorPos = e.target.selectionStart;
-        render();
-        const newInput = document.getElementById('admin-global-search');
-        if (newInput) {
-          newInput.focus();
-          newInput.setSelectionRange(cursorPos, cursorPos);
-        }
+      // Kolom pencarian nama sekolah di Header & Tabel Monitoring Admin
+      ['admin-global-search', 'table-school-search'].forEach(searchId => {
+        document.getElementById(searchId)?.addEventListener('input', (e) => {
+          state.searchQuery = e.target.value;
+          const cursorPos = e.target.selectionStart;
+          render();
+          const newInput = document.getElementById(searchId);
+          if (newInput) {
+            newInput.focus();
+            newInput.setSelectionRange(cursorPos, cursorPos);
+          }
+        });
       });
 
       document.getElementById('filter-kecamatan')?.addEventListener('change', (e) => {
