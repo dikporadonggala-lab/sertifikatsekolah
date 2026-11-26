@@ -291,7 +291,73 @@
     let barChartInstance = null;
     let doughnutChartInstance = null;
     let clockInterval = null;
+    let audioCtx = null;
 
+    // =========================================================================
+    // 5. UTILITAS AUDIO KLIK & UCAPAN SUARA TERIMA KASIH (WEB AUDIO & SPEECH API)
+    // =========================================================================
+    function playClickSound() {
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        if (!audioCtx) {
+          audioCtx = new AudioContextClass();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(680, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(340, audioCtx.currentTime + 0.045);
+
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.045);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.045);
+      } catch (e) {}
+    }
+
+    function playThankYouVoice() {
+      try {
+        // Nada lonceng sukses singkat sebelum ucapan suara
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          if (!audioCtx) audioCtx = new AudioContextClass();
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          const now = audioCtx.currentTime;
+          [523.25, 659.25, 783.99].forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + i * 0.08);
+            gain.gain.setValueAtTime(0.09, now + i * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.25);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + i * 0.08);
+            osc.stop(now + i * 0.08 + 0.25);
+          });
+        }
+
+        // Ucapan suara Bahasa Indonesia
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance('Terima kasih, data Anda sudah terkirim');
+          utterance.lang = 'id-ID';
+          utterance.rate = 0.98;
+          utterance.pitch = 1.05;
+          window.speechSynthesis.speak(utterance);
+        }
+      } catch (e) {}
+    }
+
+    // =========================================================================
+    // 6. UTILITAS NOTIFIKASI (TOAST) & MODAL KONFIRMASI (TANPA ALERT/CONFIRM)
     // =========================================================================
     // 5. UTILITAS NOTIFIKASI (TOAST) & MODAL KONFIRMASI (TANPA ALERT/CONFIRM)
     // =========================================================================
@@ -651,7 +717,8 @@
           state.session.user = data;
         }
 
-        showToast('Data Sertifikat Sekolah berhasil dikirim & dikunci otomatis!', 'success');
+        playThankYouVoice();
+        showToast('Terima kasih, data Sertifikat Sekolah Anda sudah terkirim & dikunci otomatis!', 'success');
       } catch (err) {
         showToast(err.message || 'Gagal mengirim data sertifikat.', 'error');
       } finally {
@@ -772,7 +839,8 @@
           state.session.user = data;
         }
 
-        showToast('Survei Rumah Dinas berhasil dikirim dan dikunci secara otomatis!', 'success');
+        playThankYouVoice();
+        showToast('Terima kasih, data Survei Rumah Dinas Anda sudah terkirim & dikunci otomatis!', 'success');
       } catch (err) {
         showToast(err.message || 'Gagal mengirim survei rumah dinas.', 'error');
       } finally {
@@ -2686,6 +2754,11 @@
     }
 
     document.getElementById('rumdin-app-root').addEventListener('click', (e) => {
+      const clickable = e.target.closest('button, [data-action], label[for], input[type="file"], select');
+      if (clickable) {
+        playClickSound();
+      }
+
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
 
